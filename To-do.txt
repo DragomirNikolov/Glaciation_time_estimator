@@ -1,14 +1,15 @@
 Add config_file
 
+Make glac threshold a variable
 Add reference for peak identification
 update setup.py link
 Make whole program a package
 put parse_cmd_args in helper function 
 Make result output go to n2o
 Resampling multiprocessing
-add right formating of agg(e.g. 3 is 03 but 10 is 10 ) in jon utput folders
-Make scp copy only required files instead of whole folder
+add right formating of agg(e.g. 3 is 03 but 10 is 10 ) in jon output folders
+Make scp copy only required files instead of whole folder - Done
 Figure out how to use and import folder as a library
 Add a read-me file for the library
-Should do: Change 1h to 50 % of the lifetime
-Check: What is the difference between frame 1 and 2 of lat and lon in the auxiliary file
+Should do: Change 1h to 50 % of the lifetime - Irrelevant
+Check: What is the difference between frame 1 and 2 of lat and lon in the auxiliary file - Done
