@@ -118,7 +118,7 @@ class Glaciation:
         self.avg_rate = self.rate_arr.mean()
 
 
-def select_peaks(data, filt, significant_peak_tresh=0.2, glac_tresh=0.3):
+def select_peaks(data, filt, significant_peak_tresh=0.2, glac_tresh=0.4):
     if not isinstance(data, (list, np.ndarray)):
         data = data['ice_frac_hist']
     if filt is not None:
