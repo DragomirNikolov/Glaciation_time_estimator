@@ -8,6 +8,8 @@ from Glaciation_time_estimator.Data_postprocessing.Job_result_fp_generator impor
 from Glaciation_time_estimator.Auxiliary_func.config_reader import read_config
 from derivative import dxdt
 from scipy.integrate import cumulative_trapezoid
+import warnings
+
 
 def Extract_array_from_df(series: pd.Series):
     if series.empty:
@@ -191,8 +193,8 @@ def get_combined_cloud_df(config):
         [df for sublist in cloud_properties_df_list for df in sublist], ignore_index=True)
 
 
-def extract_glaciation_events(df):
-    out_df = df[df["max_ice_fraction"]-(1-df["max_water_frac"]) > 0.5].copy()
+def extract_glaciation_events(df, glac_tresh=0.4):
+    out_df = df[df["max_ice_fraction"]-(1-df["max_water_frac"]) > glac_tresh].copy()
     part_select_peaks = partial(select_peaks, filt=None)
     out_df["glac_list"] = df.apply(part_select_peaks, axis=1)
     return out_df
@@ -200,6 +202,7 @@ def extract_glaciation_events(df):
 
 def gen_glac_df(result_df, combined_cloud_df):
     glaciations_list = []
+    
     for i, row in result_df.iterrows():
         for glaciation in row['glac_list']:
             # glaciation.
@@ -231,14 +234,20 @@ def save_glac_df(glaciations_df, config):
 
 def extract_glaciations(config):
     sqrt_mse = config["Global_sqrt_mse"]
-    combined_cloud_df = get_combined_cloud_df(config)
-    result_df = extract_glaciation_events(combined_cloud_df)
+    # combined_cloud_df = get_combined_cloud_df(config)
+    combined_cloud_df = pd.read_parquet("/wolke_scratch/dnikolo/Final_results/2022_all.parquet")
+    print(combined_cloud_df)
+    result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=0.4)
+    print(result_df)
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
-    save_glac_df(glaciations_df, config)
+    glaciations_df.to_parquet("/wolke_scratch/dnikolo/Final_results/2022_test.parquet")
+    print(glaciations_df)
+    # save_glac_df(glaciations_df, config)
 
 
 if __name__ == "__main__":
     config = read_config()
+    warnings.filterwarnings('ignore')
     global global_rmse
     global_rmse = config["Global_sqrt_mse"]
     extract_glaciations(config)
