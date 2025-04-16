@@ -195,7 +195,7 @@ def get_combined_cloud_df(config):
 
 def extract_glaciation_events(df, glac_tresh=0.4):
     out_df = df[df["max_ice_fraction"]-(1-df["max_water_frac"]) > glac_tresh].copy()
-    part_select_peaks = partial(select_peaks, filt=None)
+    part_select_peaks = partial(select_peaks, filt=None,significant_peak_tresh=glac_tresh/2,glac_tresh=glac_tresh)
     out_df["glac_list"] = df.apply(part_select_peaks, axis=1)
     return out_df
 
@@ -237,10 +237,11 @@ def extract_glaciations(config):
     # combined_cloud_df = get_combined_cloud_df(config)
     combined_cloud_df = pd.read_parquet("/wolke_scratch/dnikolo/Final_results/2022_all.parquet")
     print(combined_cloud_df)
-    result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=0.4)
+    glac_tresh=0.2
+    result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=glac_tresh)
     print(result_df)
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
-    glaciations_df.to_parquet("/wolke_scratch/dnikolo/Final_results/2022_test.parquet")
+    glaciations_df.to_parquet(f"/wolke_scratch/dnikolo/Final_results/2022_glac_{int(glac_tresh*10):02}.parquet")
     print(glaciations_df)
     # save_glac_df(glaciations_df, config)
 

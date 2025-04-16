@@ -101,6 +101,30 @@ def aggregation(resample_res_fps, agg_res_fps, agg_fact):
     for T in Ts:
         T.join()
 
+def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample_res_fps, do_resampling=False):
+    sem = threading.Semaphore(8)   # pick a threshold here
+
+    Ts = []
+    cpp_fp_list = folder_fps_CPP[folder_fp_ind]
+    ctx_fp_list = folder_fps_CTX[folder_fp_ind]
+    reformated_fp_list= folder_resample_res_fps[folder_fp_ind]
+    for filename_ind in range(len(cpp_fp_list)):
+        cpp_fp = cpp_fp_list[filename_ind]
+        ctx_fp = ctx_fp_list[filename_ind]
+        reformated_output_fp = reformated_fp_list[filename_ind]
+        merged_fp = reformated_output_fp.removesuffix(".nc")+"_merged.nc"
+        # cdo -chname,cph,cph_resampled -setgrid,/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid.txt -apply,-selname,cph [ CPPin20230101084500405SVMSGI1MD.nc ] test_1.nc
+        argv = [["cdo", "merge", "-selname,ctt", ctx_fp, "-selname,cph", cpp_fp,merged_fp ],
+                ["cdo", f"-chname,cph,cph_resampled","-chname,ctt,ctt_resampled", "-setgrid,/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid.txt",
+                    merged_fp, reformated_output_fp],
+                [merged_fp]]
+        sem.acquire()
+        T = threading.Thread(target=dispatch, args=(sem, argv))
+        T.start()
+        Ts.append(T)
+
+    for T in Ts:
+        T.join()
 
 def resampling_worker(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fps_CPP, folder_resample_res_fps, folder_agg_res_fps, transformer, do_resampling=False):
     day_start_time = time.time()
