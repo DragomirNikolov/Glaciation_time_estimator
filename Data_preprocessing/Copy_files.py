@@ -9,7 +9,7 @@ import numpy as np
 
 
 def generate_remote_folders(config):
-    target_dict = generate_filename_dict()
+    target_dict = generate_filename_dict(config)
     vec_dirname=np.vectorize(os.path.dirname)
     target_folders= {}
     for pole in config["pole_folders"]:

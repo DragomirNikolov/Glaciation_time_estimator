@@ -45,7 +45,10 @@ def check_keys(config):
         "postprocessing_output_dir",
         "time_folder_format",
         "collect_additional_properties",
-        'Global_sqrt_mse'
+        'Global_sqrt_mse',
+        'n_preproc_cores',
+        'n_preproc_threads'
+
     ]
     config_keys_set = set(config.keys())
     expected_keys_set = set(keys_to_check)
