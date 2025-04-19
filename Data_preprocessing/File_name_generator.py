@@ -235,9 +235,9 @@ def check_existance_of_unpr_files(searcher):
                 print(f"All {pole} {file_array_name} files are present")
 
 
-def generate_filename_dict(exclude_existing=True):
+def generate_filename_dict(config, exclude_existing=True):
     searcher = MissingFilesSearcher(
-        read_config(), exclude_existing=exclude_existing)
+        config, exclude_existing=exclude_existing)
     searcher.gen_target_filenames()
     if exclude_existing:
         check_existance_of_unpr_files(searcher)
@@ -252,6 +252,6 @@ if __name__ == "__main__":
     # searcher = MissingFilesSearcher(start_time, end_time, t_deltas)
     # searcher.gen_target_filenames()
     # check_existance_of_unpr_files(searcher)
-    result_dict = generate_filename_dict()
+    result_dict = generate_filename_dict(read_config())
     print(result_dict['filter'])
     print("Done")
