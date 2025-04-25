@@ -20,7 +20,7 @@ agg_fact=3
 job_ids=()
 config_name="${GTE_CONFIG_DIR##*/}"
 # for dt in 3 5 6; do
-for dt in 9; do
+for dt in 6; do
     for min_temp in $(seq $dt $dt 38); do
         # max = min - dt because we deal with absolutes of negative numbers
         max_temp=$((min_temp - dt))

@@ -2,8 +2,6 @@ import os
 import xarray as xr
 import numpy as np
 
-global CLAAS_FP
-CLAAS_FP = os.environ["CLAAS_DIR"]
 
 
 class OutputFile:
@@ -161,17 +159,3 @@ class OutputNonResampledFile(OutputFile):
         self.ctx_ds.close()
 
 
-class OutputFilteredFile(OutputFile):
-
-    def generate_output_fp(self, fp, min_temp, max_temp):
-        os.makedirs(os.path.dirname(fp), exist_ok=True)
-        reduced_fp = fp.strip(os.path.join(CLAAS_FP, "Resampled_data"))
-        output_fp = reduced_fp.replace(
-            f"Agg_{self.agg_fact:02}_", f"Agg_{self.agg_fact:02}_T_{abs(min_temp):02}_{abs(max_temp):02}_")
-        output_fp = os.path.join(CLAAS_FP, "Filtered_Data", output_fp)
-        os.makedirs(os.path.dirname(output_fp), exist_ok=True)
-        return output_fp
-
-    def save_file(self, filename, min_temp, max_temp):
-        output_fp = self.generate_output_fp(filename, min_temp, max_temp)
-        self.cph_ds.to_netcdf(output_fp)
