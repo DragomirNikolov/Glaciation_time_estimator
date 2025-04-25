@@ -68,6 +68,10 @@ def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample
         os.makedirs(os.path.dirname(merged_fp), exist_ok=True)
         argv = [["cdo", "merge", "-selname,ctt", ctx_fp, "-selname,cph", cpp_fp, merged_fp],
                 ["cdo", f"-chname,cph,cph_resampled", "-chname,ctt,ctt_resampled", "-setgrid,/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid.txt",
+=======
+        argv = [["cdo", "-O", "merge", "-selname,ctt", ctx_fp, "-selname,cph", cpp_fp, merged_fp],
+                ["cdo", "-O", f"-chname,cph,cph_resampled", "-chname,ctt,ctt_resampled", f"-setgrid,{grid_fp}",
+>>>>>>> refs/remotes/origin/main
                     merged_fp, reformated_output_fp],
                 [merged_fp]]
         sem.acquire()

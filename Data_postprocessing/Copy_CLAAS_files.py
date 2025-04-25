@@ -7,15 +7,15 @@ from Glaciation_time_estimator.Auxiliary_func.config_reader import read_config
 from datetime import datetime
 import numpy as np
 
-def generate_remote_fps(pole):
-    target_dict = generate_filename_dict(exclude_existing=False)
+def generate_remote_fps(config, pole):
+    target_dict = generate_filename_dict(config, exclude_existing=False)
     return target_dict[pole]["resample_CPP"]
 
 def copy_files(config):
     tmp_dir = os.environ["TMPDIR"]
     vec_dirname = np.vectorize(os.path.dirname)
     for pole in config["pole_folders"]:
-        target_fps = generate_remote_fps(pole)
+        target_fps = generate_remote_fps(config, pole)
         target_folders = np.unique(vec_dirname(target_fps))
         data_dir = os.path.join(tmp_dir, "Data", pole, "")
         os.makedirs(data_dir, exist_ok=True)

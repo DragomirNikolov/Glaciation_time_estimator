@@ -47,7 +47,8 @@ def check_keys(config):
         "collect_additional_properties",
         'Global_sqrt_mse',
         'n_preproc_cores',
-        'n_preproc_threads'
+        'n_preproc_threads',
+        'grid_fps'
 
     ]
     config_keys_set = set(config.keys())

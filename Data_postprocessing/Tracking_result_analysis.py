@@ -64,23 +64,40 @@ def extract_value(val):
     return val
 
 
+# def extract_cpp_vars(time, pole, config):
+#     if time>config["struct_boundary_date"]:
+#         cpp_filename = time.strftime("CPPin%Y%m%d%H%M%S405SVMSGI1MD.nc")
+#     else:
+#         cpp_filename = time.strftime("CPPin%Y%m%d%H%M%S405SVMSG01MD.nc")
+#     with xr.load_dataset(os.path.join(os.environ["TMPDIR"], "Data", pole, cpp_filename)) as cpp_data:
+#         return cpp_data['cot'],cpp_data['cwp']
+
 def extract_cpp_vars(time, pole, config):
     if time>config["struct_boundary_date"]:
-        cpp_filename = time.strftime("CPPin%Y%m%d%H%M%S405SVMSGI1MD.nc")
+        cpp_filename = time.strftime("%Y/%m/%d/CPPin%Y%m%d%H%M%S405SVMSGI1MD.nc")
     else:
-        cpp_filename = time.strftime("CPPin%Y%m%d%H%M%S405SVMSG01MD.nc")
-    with xr.load_dataset(os.path.join(os.environ["TMPDIR"], "Data", pole, cpp_filename)) as cpp_data:
+        cpp_filename = time.strftime("%Y/%m/%d/CPPin%Y%m%d%H%M%S405SVMSG01MD.nc")
+    with xr.load_dataset(os.path.join(config["CLAAS_fp"], pole, cpp_filename)) as cpp_data:
         return cpp_data['cot'],cpp_data['cwp']
+
+
+# def extract_ctx_vars(time, pole, config):
+#     if time>config["struct_boundary_date"]:
+#         ctx_filename = time.strftime("CTXin%Y%m%d%H%M%S405SVMSGI1MD.nc")
+#     else:
+#         ctx_filename = time.strftime("CTXin%Y%m%d%H%M%S405SVMSG01MD.nc")
+#     with xr.load_dataset(os.path.join(os.environ["TMPDIR"], "Data", pole, ctx_filename)) as ctx_data:
+#         return ctx_data['ctp']
+    # print(f'{min_temp} to {max_temp} Loading {time_str}')
+# /cluster/work/climate/dnikolo/dump/Data/np/CPPin20210101000000405SVMSGI1MD.nc
 
 def extract_ctx_vars(time, pole, config):
     if time>config["struct_boundary_date"]:
-        ctx_filename = time.strftime("CTXin%Y%m%d%H%M%S405SVMSGI1MD.nc")
+        ctx_filename = time.strftime("%Y/%m/%d/CTXin%Y%m%d%H%M%S405SVMSGI1MD.nc")
     else:
-        ctx_filename = time.strftime("CTXin%Y%m%d%H%M%S405SVMSG01MD.nc")
-    with xr.load_dataset(os.path.join(os.environ["TMPDIR"], "Data", pole, ctx_filename)) as ctx_data:
+        ctx_filename = time.strftime("%Y/%m/%d/CTXin%Y%m%d%H%M%S405SVMSG01MD.nc")
+    with xr.load_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename)) as ctx_data:
         return ctx_data['ctp']
-    # print(f'{min_temp} to {max_temp} Loading {time_str}')
-# /cluster/work/climate/dnikolo/dump/Data/np/CPPin20210101000000405SVMSGI1MD.nc
 
 
 def extract_cloud_number_field(cloudtrack_data):

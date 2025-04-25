@@ -5,7 +5,7 @@ from Glaciation_time_estimator.Auxiliary_func.config_reader import read_config
 
 if __name__ == "__main__":
     config = read_config()
-    if config["collect_additional_properties"]:
-        copy_files(config)
+    # if config["collect_additional_properties"]:
+    #     copy_files(config)
     analyse_tracked_clouds(config)
     extract_glaciations(config)

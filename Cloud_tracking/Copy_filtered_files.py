@@ -23,7 +23,7 @@ def parse_cmd_args():
     }
 
 def generate_remote_fps(config, cmd_args):
-    target_dict = generate_filename_dict(exclude_existing=False)
+    target_dict = generate_filename_dict(config, exclude_existing=False)
     # Replace filename parts to include temperature bounds.
     target_fps = np.char.replace(
         target_dict[cmd_args["pole"]]["filter"],

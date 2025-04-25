@@ -8,8 +8,8 @@ for YEAR in "${YEARS[@]}"; do
             CONFIG_FILE="/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/${YEAR}_tracking/${MONTH}_${part}.yaml"
             bash /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Cloud_tracking/Slurm_jobs/All_t_jobs.sh -c $CONFIG_FILE
         done
-        if [ $((10#$MONTH % 3)) -eq 0 ]; then
-                sleep 4h
-        fi
+        # if [ $((10#$MONTH % 3)) -eq 0 ]; then
+        #         sleep 4h
+        # fi
     done
 done
