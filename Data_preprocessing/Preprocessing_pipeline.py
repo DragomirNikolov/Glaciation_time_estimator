@@ -65,7 +65,7 @@ def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample
         reformated_output_fp = reformated_fp_list[filename_ind]
         merged_fp = reformated_output_fp.removesuffix(".nc")+"_merged.nc"
         # cdo -chname,cph,cph_resampled -setgrid,/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid.txt -apply,-selname,cph [ CPPin20230101084500405SVMSGI1MD.nc ] test_1.nc
-        os.makedirs(os.path.dirname(merged_fp),exist_ok=True)
+        os.makedirs(os.path.dirname(merged_fp), exist_ok=True)
         argv = [["cdo", "merge", "-selname,ctt", ctx_fp, "-selname,cph", cpp_fp, merged_fp],
                 ["cdo", f"-chname,cph,cph_resampled", "-chname,ctt,ctt_resampled", "-setgrid,/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid.txt",
                     merged_fp, reformated_output_fp],
@@ -80,8 +80,6 @@ def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample
     formatting_end_time = time.time()
     print(
         f"Formated day {folder_fp_ind} in {round(formatting_start_time-formatting_end_time,2)}s starting with fp: {folder_fps_CTX[folder_fp_ind][0]}")
-
-    
 
 
 # Used if Resample: True in the config file
@@ -127,6 +125,9 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
     print(
         f"Resampled day {folder_fp_ind} in {round(resample_end_time-day_start_time,2)}s starting with fp: {folder_fps_CTX[folder_fp_ind][0]}")
 
+
+
+#Aggregation using cdo
 def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, agg_fact, n_threads=8):
     agg_start_time = time.time()
     sem = threading.Semaphore(n_threads)   # pick a threshold here
@@ -189,7 +190,7 @@ def filter_folder(day_fp_to_filter, temp_bounds, agg_fact):
 def prepare_pole(pole, target_filenames, config, n_workers):
     aux_fps = config['aux_fps']
     agg_fact = config['agg_fact']
-    n_threads=config["n_preproc_threads"]
+    n_threads = config["n_preproc_threads"]
     folder_fps_CTX = fps_by_folder(target_filenames[pole]["resample_CTX"])
     folder_fps_CPP = fps_by_folder(target_filenames[pole]["resample_CPP"])
     folder_resample_res_fps = fps_by_folder(
@@ -206,10 +207,10 @@ def prepare_pole(pole, target_filenames, config, n_workers):
     else:
         preparation_worker = partial(format_folder, folder_fps_CTX=folder_fps_CTX,
                                      folder_fps_CPP=folder_fps_CPP, folder_resample_res_fps=folder_resample_res_fps, n_threads=n_threads)
-        
-    aggregation_worker = partial(aggregte_folder,folder_resample_res_fps = folder_resample_res_fps,folder_agg_res_fps= folder_agg_res_fps, agg_fact=agg_fact,n_threads=n_threads)
-    
-    
+
+    aggregation_worker = partial(aggregte_folder, folder_resample_res_fps=folder_resample_res_fps,
+                                 folder_agg_res_fps=folder_agg_res_fps, agg_fact=agg_fact, n_threads=n_threads)
+
     ind_to_iterate = range(len(folder_fps_CTX))
     if n_workers > 1:
         pole_pool = Pool(n_workers)
@@ -220,7 +221,7 @@ def prepare_pole(pole, target_filenames, config, n_workers):
         pole_pool.map(aggregation_worker, ind_to_iterate)
         pole_pool.close()
         pole_pool.join()
-        
+
     elif n_workers == 1:
         warnings.warn("Working without multiprocessing")
         for ind in ind_to_iterate:
@@ -242,7 +243,7 @@ def prepare_all_files(target_filenames, config):
     # pool.close()
     # pool.join()
     part_prepare_pole_fun = partial(prepare_pole, target_filenames=target_filenames,
-                                     config=config, n_workers=int(n_tot_workers/len(pole_folders)))
+                                    config=config, n_workers=int(n_tot_workers/len(pole_folders)))
     for pole in pole_folders:
         part_prepare_pole_fun(pole)
     end_time = time.time()
