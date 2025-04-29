@@ -20,16 +20,16 @@ The processing is divided into the following steps:
       By analyzing consecutive frames, the algorithm determines which identified features persist over multiple timesteps. Pixels within features that remain for a predefined duration are marked, forming *cloud fragment tracks*.
 4. A postprocessing algorithm then analyses the individual cloud fragment tracks to extract the time evolution of all properties of interest, such as cloud top phase, cloud fragment size, mean cloud optical thickness, etc.
 
-1. **Preprocessing**  
-   - Resampling is performed to convert geostationary data to a regular latitude/longitude reference frame.  
-   - Cloud top temperature filtering is applied to split larger clouds into individual temperature homogenious cloud segments
-   - The data is aggregated in n x n bins (usually n=3) for reduced processing time and data storage
+// 1. **Preprocessing**  
+//   - Resampling is performed to convert geostationary data to a regular latitude/longitude reference frame.  
+//   - Cloud top temperature filtering is applied to split larger clouds into individual temperature homogenious cloud segments
+//   - The data is aggregated in n x n bins (usually n=3) for reduced processing time and data storage
 
-2. **Tracking**  
-   - The PyFLEXTRKR library is utilized to track the resulting cloud segments. The library tracks segments with area larger than 1000 [km^2] surviving more than 45 min 
+//2. **Tracking**  
+//   - The PyFLEXTRKR library is utilized to track the resulting cloud segments. The library tracks segments with area larger than 1000 [km^2] surviving more than 45 min 
+//
+//3. **Postprocessing**  
+//   - The tracked fragments are analyzed, and data for each cloud is stored in a Parquet binary file format. 
 
-3. **Postprocessing**  
-   - The tracked fragments are analyzed, and data for each cloud is stored in a Parquet binary file format. 
-
-4. **Result Analysis**  
+//4. **Result Analysis**  
    - Cloud glaciation is identified, and the CGT is measured.
