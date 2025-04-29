@@ -2,8 +2,12 @@
 
 ## 1. Introduction
 **Glaciation Time Estimator (GTE)** is a climate data analysis tool used to measure cloud glaciation time (CGT) in stratiform clouds. It analyses cloud top data from the CLAAS-3 dataset (L2 product of the SEVIRI instrument onboard Meteosat Second Generation) to identify and track individual cloud tops in the mixed-phase temperature range, from 0 to -38°C. The software uses snapshots of the global cloud mask and cloud top temperature (CTT) to isolate stratiform clouds with nearly uniform CTT. Then, from consecutive snapshots, it tracks the movement of those cloud tops using the [PyFLEXTRK](https://github.com/FlexTRKR/PyFLEXTRKR) feature tracker. Finally, the thermodynamic phase (CPH; liquid, ice or mixed) evolution of these cloud tops is analysed to yield a dataset of the glaciation events that have occurred and the properties of the tracked cloud tops.
+## 2. Processed dataset
+Dataset of the properties of the ~3.5 million mixed-phase clouds and the corresponding ~100,000 detected glaciations will be made available upon request by email to dnikolo@ethz.ch.
+## 3. Installing GTE
+## 4. Running GTE
 
-## 1. Structure
+## 1. Code structure
 The processing is divided into the following steps:
 
 1. **Preprocessing**  
