@@ -18,7 +18,8 @@ The processing is divided into the following steps:
       Within each filtered “frame,” pixels forming continuous objects larger than a predefined threshold are assigned unique feature numbers.
    2. *Feature tracking:*  
       By analyzing consecutive frames, the algorithm determines which identified features persist over multiple timesteps. Pixels within features that remain for a predefined duration are marked, forming *cloud fragment tracks*.
-4. A postprocessing algorithm then analyses the individual cloud fragment tracks to extract the time evolution of all properties of interest, such as cloud top phase, cloud fragment size, mean cloud optical thickness, etc.
+3. **Postprocessing** 
+   A postprocessing algorithm then analyses the individual cloud fragment tracks to extract the time evolution of all properties of interest, such as cloud top phase, cloud fragment size, mean cloud optical thickness, etc.
 
 <!--  1. **Preprocessing**  
    - Resampling is performed to convert geostationary data to a regular latitude/longitude reference frame.  
