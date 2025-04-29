@@ -1,7 +1,7 @@
 # Glaciation Time Estimator
 
 ## 1. Introduction
-**Glaciation Time Estimator (GTE)** is a climate data analysis tool used to measure cloud glaciation time (CGT) in stratiform clouds. It analyses cloud top data from the CLAAS-3 dataset (L2 product of the SEVIRI instrument onboard Meteosat Second Generation) to identify and track individual cloud tops in the mixed-phase temperature range, from 0 to -38°C. The software uses snapshots of the global cloud mask and cloud top temperature (CTT) to isolate stratiform clouds with nearly uniform CTT. Then, from consecutive snapshots, it tracks the movement of those cloud tops using the [PyFLEXTRK](https://github.com/FlexTRKR/PyFLEXTRKR) feature tracker. Finally, the thermodynamic phase (liquid, ice or mixed) evolution of these cloud tops is measured and analysed to yield a dataset of the glaciation events that have occurred and the properties of the tracked cloud tops.
+**Glaciation Time Estimator (GTE)** is a climate data analysis tool used to measure cloud glaciation time (CGT) in stratiform clouds. It analyses cloud top data from the CLAAS-3 dataset (L2 product of the SEVIRI instrument onboard Meteosat Second Generation) to identify and track individual cloud tops in the mixed-phase temperature range, from 0 to -38°C. The software uses snapshots of the global cloud mask and cloud top temperature (CTT) to isolate stratiform clouds with nearly uniform CTT. Then, from consecutive snapshots, it tracks the movement of those cloud tops using the [PyFLEXTRK](https://github.com/FlexTRKR/PyFLEXTRKR) feature tracker. Finally, the thermodynamic phase (CPH; liquid, ice or mixed) evolution of these cloud tops is analysed to yield a dataset of the glaciation events that have occurred and the properties of the tracked cloud tops.
 
 ## 1. Structure
 The processing is divided into the following steps:
@@ -20,6 +20,8 @@ The processing is divided into the following steps:
       By analyzing consecutive frames, the algorithm determines which identified features persist over multiple timesteps. Pixels within features that remain for a predefined duration are marked, forming *cloud fragment tracks*.
 3. **Postprocessing**  
    A postprocessing algorithm then analyses the individual cloud fragment tracks to extract the time evolution of all properties of interest, such as cloud top phase, cloud fragment size, mean cloud optical thickness, etc.
+The processing pipeline is visualised in the figure below:  
+![preprocessing_pipeline_2](https://github.com/user-attachments/assets/ed675179-9c12-4b47-9825-d2b913d64633)
 
 <!--  1. **Preprocessing**  
    - Resampling is performed to convert geostationary data to a regular latitude/longitude reference frame.  
