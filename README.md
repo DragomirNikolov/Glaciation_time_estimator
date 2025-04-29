@@ -20,6 +20,7 @@ The processing is divided into the following steps:
       By analyzing consecutive frames, the algorithm determines which identified features persist over multiple timesteps. Pixels within features that remain for a predefined duration are marked, forming *cloud fragment tracks*.
 3. **Postprocessing**  
    A postprocessing algorithm then analyses the individual cloud fragment tracks to extract the time evolution of all properties of interest, such as cloud top phase, cloud fragment size, mean cloud optical thickness, etc.
+
 The processing pipeline is visualised in the figure below:  
 ![preprocessing_pipeline_2](https://github.com/user-attachments/assets/ed675179-9c12-4b47-9825-d2b913d64633)
 
