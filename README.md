@@ -7,7 +7,7 @@ Dataset of the properties of the ~3.5 million mixed-phase clouds and the corresp
 ## 3. Installing GTE
 ## 4. Running GTE
 
-## 1. Code structure
+## 5. Code structure
 The processing is divided into the following steps:
 
 1. **Preprocessing**  
