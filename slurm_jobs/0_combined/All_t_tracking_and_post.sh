@@ -26,7 +26,7 @@ for dt in 6; do
         max_temp=$((min_temp - dt))
         for pole in "np" "sp"; do
             name=T_"$min_temp"_"$max_temp"_"$agg_fact"_"$pole"_"${config_name::-5}"
-            job_id=$(sbatch --parsable -J "$name" "$GTE_DIR"/Cloud_tracking/Slurm_jobs/job.bsub -h $max_temp -l $min_temp -p $pole -c $GTE_CONFIG_DIR)
+            job_id=$(sbatch --parsable -J "$name" "$GTE_DIR"/2_tracking/tracking_job.bsub -h $max_temp -l $min_temp -p $pole -c $GTE_CONFIG_DIR)
             job_ids+=("$job_id")
             echo "Submited: ${name} Job ID: ${job_id}"
         done
@@ -37,6 +37,6 @@ postproc_name="${config_name::-5}_postproc"
 # Submit post-processing job after all jobs have completed
 if [ ${#job_ids[@]} -gt 0 ]; then
     dependency_list=$(IFS=,; echo "${job_ids[*]}")
-    sbatch --parsable --dependency=afterok:$dependency_list -J "$postproc_name" /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Data_postprocessing/Slurm_jobs/postproc_job.bsub -c $GTE_CONFIG_DIR
+    sbatch --parsable --dependency=afterok:$dependency_list -J "$postproc_name" "$GTE_DIR"/3_postprocessing/postproc_job.bsub -c $GTE_CONFIG_DIR
     echo "Post-processing job submitted with ID: $postproc_name"
 fi

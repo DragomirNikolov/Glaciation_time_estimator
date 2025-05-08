@@ -85,19 +85,19 @@ def config_setup(work_dir: str, base_setup_contnet: list, arg_dict: dict, config
         yaml.dump(temp_setup, temp_setup_file)
     return temp_setup_fp
 
-
-if __name__ == "__main__":
+def generate_pyflextrkr_config(config):
     # base_dir = os.environ['TMPDIR']
     base_dir = os.environ.get('TMPDIR', "/cluster/work/climate/dnikolo/dump")
     if base_dir == "/":
         base_dir = "/cluster/work/climate/dnikolo/dump"
     arg_dict = parse_cmd_args()
-    config = read_config()
-
     with open(arg_dict['base_config'], 'r') as stream:
         try:
             base_config_content = yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             print(exc)
             exit
-    config_setup(base_dir, base_config_content, arg_dict, config)
+    return config_setup(base_dir, base_config_content, arg_dict, config)
+
+if __name__ == "__main__":
+    generate_pyflextrkr_config(read_config())

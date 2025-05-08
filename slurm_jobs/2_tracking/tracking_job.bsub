@@ -49,18 +49,15 @@ module load stack/2024-06 gcc/12.2.0 openmpi/4.1.6 nco ffmpeg/6.0 #python/3.11.6
 
 #Load pyflextrkr python
 source "${ENV_BIN_DIR}"/activate
-cd $GTE_DIR/../ || exit
-
-python -m Glaciation_time_estimator.Cloud_tracking.Copy_filtered_files  -t "$min_temp" "$max_temp" -p $pole -cf $GTE_CONFIG_DIR
-
-# Generate setup file for the iteration in ${TMPDIR}/T-${MINTEMP}-${MAXTEMP}
-python -m Glaciation_time_estimator.Cloud_tracking.Generate_config -t $min_temp $max_temp -bc "${GTE_DIR}/Cloud_tracking/custom_setup.yml" -cf $GTE_CONFIG_DIR
-
+#Copy files to local scratch, create result directory and generate setup.yml
 cd "$RESULT_DIR" || exit
-# #Run PyFLEXTRKR
-python /cluster/work/climate/dnikolo/n2o/PyFLEXTRKR/runscripts/run_generic_tracking.py ./setup.yml
+python $GTE_DIR/runscripts/Tracking_pipeline.py -t "$min_temp" "$max_temp" -p $pole -bc "${GTE_DIR}/Cloud_tracking/custom_setup.yml" -rd "${RESULT_DIR}/" -cf $GTE_CONFIG_DIR
 
-cd $GTE_DIR/../ || exit
-#Send results back to server
-python -m Glaciation_time_estimator.Cloud_tracking.Send_results -cf $GTE_CONFIG_DIR -rd "${RESULT_DIR}/" -p "${pole}" -t $min_temp $max_temp
+
+# # #Run PyFLEXTRKR
+# python /cluster/work/climate/dnikolo/n2o/PyFLEXTRKR/runscripts/run_generic_tracking.py ./setup.yml
+
+# cd $GTE_DIR || exit
+# #Send results back to server
+# python ./runscripts/Tracking_pipeline_2.py -cf $GTE_CONFIG_DIR -p "${pole}" -t $min_temp $max_temp
 date

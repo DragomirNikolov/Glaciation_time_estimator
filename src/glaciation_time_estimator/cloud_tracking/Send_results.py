@@ -28,10 +28,8 @@ def parse_cmd_args():
     }
     return args_dict
 
-
-if __name__ == "__main__":
-    # pole/Agg_03_T_05_00/pixel_path_tracking/YmD.HM(start)_YmD.HM(end)
-    config = read_config()
+def send_results(config):
+     # pole/Agg_03_T_05_00/pixel_path_tracking/YmD.HM(start)_YmD.HM(end)
     cmd_args = parse_cmd_args()
     # print(config['start_time'])
     time_format = "%Y%m%d.%H%M"
@@ -44,5 +42,6 @@ if __name__ == "__main__":
     os.makedirs(output_dir, exist_ok=True)
     subprocess.run(
         ["rsync", "-auq", cmd_args["results_dir"], output_dir])
-#n2o_fp
-#rsync -aq –rsync-path=”mkdir -p n2o_fp && rsync” file user@remote:n2o_fp
+
+if __name__ == "__main__":
+    send_results(read_config())

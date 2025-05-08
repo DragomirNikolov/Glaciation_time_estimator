@@ -37,10 +37,9 @@ def generate_remote_fps(config, cmd_args):
     target_fps = np.char.replace(target_fps, config["CLAAS_fp"],"")
     return np.char.replace(target_fps, "Resampled_Data", "Filtered_Data")
 
-if __name__ == "__main__":
-    config = read_config()
-    target_fps = generate_remote_fps(config, parse_cmd_args())
 
+def copy_filtered_files(config):
+    target_fps = generate_remote_fps(config, parse_cmd_args())
     # Create the local destination directory.
     tmp_dir = os.environ["TMPDIR"]
     data_dir = os.path.join(tmp_dir, "Data")
@@ -52,7 +51,6 @@ if __name__ == "__main__":
         tmp_filename = f.name
         for path in target_fps:
             f.write(path + "\n")
-            # print(path)s
 
     # Use rsync's --files-from option.
     # The source directory is set to "/" so that the file paths in the list (which are absolute)
@@ -67,4 +65,10 @@ if __name__ == "__main__":
     subprocess.run(cmd)
 
     # Remove the temporary file.
-    os.remove(tmp_filename)
+    os.remove(tmp_filename) 
+
+if __name__ == "__main__":
+    copy_filtered_files(read_config())
+
+    
+
