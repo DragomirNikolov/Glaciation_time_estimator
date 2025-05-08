@@ -11,7 +11,7 @@ python3 -m venv /venv_dir
 source /venv_dir/bin/activate   # on macOS/Linux
 /venv_dir\Scripts\activate      # on Windows
 ```
-Then head over to the page of [PyFLEXTRK](https://github.com/FlexTRKR/PyFLEXTRKR) and install the package.  
+Then head over to the page of [PyFLEXTRK](https://github.com/FlexTRKR/PyFLEXTRKR) and install the package. Note that this step is not required if only the post-processing portion of the package is used.    
 Once PyFLEXTRK is installed, you can proceed to installing GTE. For this purpose you will need to first pull the package from GitHub to a local directory (/GTE_DIR). In terminal:  
 ```bash
 git clone https://github.com/FlexTRKR/PyFLEXTRKR.git
