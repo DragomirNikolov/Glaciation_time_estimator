@@ -40,7 +40,10 @@ def main(year: int, template_path: str, output_root: str) -> None:
 
     for month in range(1, 13):
         # -------- segment 1: 1st 00:00  -->  15th 00:00 --------
-        s1 = datetime(year, month, 1, 0, 0)
+        if month== 1:
+            s1 = datetime(year, month, 1, 0, 0)
+        else:
+            s1 = datetime(year, month, 1, 0, 15)
         e1 = datetime(year, month, 15, 0, 0)
         txt1 = replace_times(template, s1.strftime(TIME_FMT), e1.strftime(TIME_FMT))
         with open(os.path.join(out_dir, f"{month:02d}_01.yaml"), "w") as f:
@@ -49,7 +52,7 @@ def main(year: int, template_path: str, output_root: str) -> None:
         # -------- segment 2: 15th 15:00  -->  1st of next month 00:00 --------
         s2 = datetime(year, month, 15, 15, 0)
         if month == 12:
-            e2 = datetime(year + 1, 1, 1, 0, 0)
+            e2 = datetime(year, 12, 31, 23, 45)
         else:
             e2 = datetime(year, month + 1, 1, 0, 0)
         txt2 = replace_times(template, s2.strftime(TIME_FMT), e2.strftime(TIME_FMT))

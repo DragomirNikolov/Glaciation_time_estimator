@@ -1,0 +1,109 @@
+---
+# Arctic mixed phase stratus tracking configuration file
+#STILL NOT SET UP
+# 0 - Warnings , 1 - Info , 2 - Debug
+debug_mode: 0
+logger_filepath: '/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimatior/Debug/Logging/Log_standard.log'
+error_filepath: '/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimatior/Debug/Errors/Error_standard.log'
+
+# Identify features to track
+run_idfeature: True
+# Track single consecutive feature files
+run_tracksingle: True
+# Run tracking for all files
+run_gettracks: True
+# Calculate feature statistics
+run_trackstats: True
+# Link merge/split tracks
+run_mergesplit: True
+# Map tracking to pixel files
+run_mapfeature: True
+
+# Start/end date and time
+# startdate: '20040201.1415'
+# enddate: '20040201.2000' #This is the right format
+startdate: '20040201.1415'
+enddate:   '20040201.2000' 
+
+# Parallel processing set up
+# run_parallel: 1 (local cluster), 2 (Dask MPI)
+run_parallel: 0
+nprocesses: 16  # Number of processors to use if run_parallel=1
+
+databasename: 'Agg_03_T_5_0_'
+# Specify date/time string format in the file name
+# E.g., radar_20181101.011503.nc --> yyyymodd.hhmmss
+# E.g., wrfout_2018-11-01_01:15:00 --> yyyy-mo-dd_hh:mm:ss
+# time_format: 'dd-mo-yyyy_hh:mm:ss'
+time_format: 'yyyymoddhhmmss'
+# Input files directory
+clouddata_path: '/cluster/work/climate/dnikolo/n2o/TEST/example_preprocessing/'
+# Working directory for the tracking data
+root_path: '/cluster/work/climate/dnikolo/n2o/TEST/example_postprocessing'
+# Working sub-directory names
+tracking_path_name: 'tracking'
+stats_path_name: 'stats'
+pixel_path_name: 'pixel_path_tracking'
+
+# Specify types of feature being tracked
+# This adds additional feature-specific statistics to be computed
+feature_type: 'generic'
+
+# Specify data structure
+datatimeresolution: 0.25     # hours
+pixel_radius: 2.42      # km calculated based on difference between consecutive x values and earth radius 6371 km
+time_dimname: 'time'
+x_dimname: 'lon'
+y_dimname: 'lat'
+time_coordname: 'time'
+x_coordname: 'lon'
+y_coordname: 'lat'
+field_varname: 'cph_filtered'
+
+# Feature detection parameters
+label_method: 'ndimage.label'
+field_thresh: [0.9, 2.1]  # variable thresholds
+min_size: 1000.0   # Min area to define a feature (km^2)
+R_earth: 6378.0  # Earth radius (km)
+
+# Tracking parameters
+####??? One bug may have to do with timegap - whatever is that 0.75 doesnt't work
+timegap: 0.3          # hour
+othresh: 0.3           # overlap percentage threshold
+
+####??? How can there be 3 clouds in an image with 2 circles??? The code bugs if we set it to 2
+maxnclouds: 1000       # Maximum number of features in one snapshot 
+
+nmaxlinks: 100          # Maximum number of overlaps that any single feature can be linked to
+duration_range: [4, 1650]   # A vector [minlength,maxlength] to specify the duration range for the tracks
+# Flag to remove short-lived tracks [< min(duration_range)] that are not mergers/splits with other tracks
+# 0:keep all tracks; 1:remove short tracks
+remove_shorttracks: 1
+# Set this flag to 1 to write a dense (2D) trackstats netCDF file
+# Note that for datasets with lots of tracks, the memory consumption could be very large
+trackstats_dense_netcdf: 1
+# Minimum time difference threshold to match track stats with cloudid pixel files
+
+####???
+match_pixel_dt_thresh: 10.0  # seconds ???
+
+# Link merge/split parameters to main tracks
+maintrack_area_thresh: 100  # [km^2] Main track area threshold
+maintrack_lifetime_thresh: 1.0  # [hour] Main track duration threshold
+
+####??? ONE BUG MAY HAVE TO DO WITH THOSE. Doesn't work at split and merge 0.75
+split_duration: 1  # [hour] Split tracks <= this length is linked to the main tracks
+merge_duration: 1  # [hour] Merge tracks <= this length is linked to the main tracks
+
+# Define tracked feature variable names
+feature_varname: 'feature_number'
+nfeature_varname: 'nfeatures'
+featuresize_varname: 'npix_feature'
+
+# Track statistics output file dimension names
+tracks_dimname: 'tracks'
+times_dimname: 'times'
+fillval: -9999
+# Output file base names
+finalstats_filebase: 'trackstats_final_'
+pixeltracking_filebase: 'cloudtracks_'

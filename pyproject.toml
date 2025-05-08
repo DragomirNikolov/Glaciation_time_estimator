@@ -1,0 +1,19 @@
+[project]
+name = "glaciation-time-estimator"          # distribution name on PyPI
+version = "0.1.0"
+authors = [{name = "Dragomir Nikolov", email = "dnikolo@ethz.ch"}]
+description = "Detect cloud-glaciation events and calculate their properties"
+readme = "README.md"
+requires-python = ">=3.9"
+dependencies = ["numpy", "scipy", "numba", "xarray", "pandas"]
+
+[project.urls]
+Homepage = "https://github.com/DragomirNikolov/Glaciation_time_estimator"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+packages = ["glaciation_time_estimator"]

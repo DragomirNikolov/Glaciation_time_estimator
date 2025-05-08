@@ -3,8 +3,8 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20071101_0000"
-end_time: "20071115_0000"
+start_time: "20080101_0000"
+end_time: "20080102_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
@@ -64,7 +64,7 @@ Resample: False
 agg_fact: 3
 # Total number of cores working on the preprocessing
 # To turn multiprocessing on set this to 1
-n_preproc_cores: 2
+n_preproc_cores: 6
 # Number of threads per core executing commands
 n_preproc_threads: 8
 
@@ -85,7 +85,7 @@ time_folder_format: "%Y%m%d.%H%M"
 
 # Should the program output a CSV file with cloud and glaciation properties on top of the standard parquet binary 
 # Turn on for readability
-write_csv: True
+write_csv: False
 
 # Defined as every analisis done outside cloud top phase and cloud top temperature
 # Defined as 
