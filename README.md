@@ -5,6 +5,14 @@
 ## 2. Processed dataset
 Dataset of the properties of the ~3.5 million mixed-phase clouds and the corresponding ~100,000 detected glaciations will be made available upon request by email to dnikolo@ethz.ch.
 ## 3. Installing GTE
+First we advise you to create a virtual environment for the project (e.g. in /venv_dir):
+```bash
+python3 -m venv /venv_dir
+source /venv_dir/bin/activate   # on macOS/Linux
+/venv_dir\Scripts\activate      # on Windows
+```
+The dependencies are listed in the 
+The cloud tracking is based on the 
 ## 4. Running GTE
 
 ## 5. Code structure
