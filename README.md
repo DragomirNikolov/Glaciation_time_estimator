@@ -5,23 +5,23 @@
 ## 2. Processed dataset
 Dataset of the properties of the ~3.5 million mixed-phase clouds and the corresponding ~100,000 detected glaciations will be made available upon request by email to dnikolo@ethz.ch.
 ## 3. Installing GTE
-First we advise you to create a virtual environment for the project (e.g. in /venv_dir):  
+First, we advise you to create and activate a virtual environment for the project (e.g. in /venv_dir):  
 ```bash
 python3 -m venv /venv_dir
 source /venv_dir/bin/activate   # on macOS/Linux
 /venv_dir\Scripts\activate      # on Windows
 ```
 Then head over to the page of [PyFLEXTRK](https://github.com/FlexTRKR/PyFLEXTRKR) and install the package.  
-Once PyFLEXTRK is installed, you can proceed to installing GTE. For this purpose you will need to first pull the package from GitHub to a local directory (GTE_DIR):  
+Once PyFLEXTRK is installed, you can proceed to installing GTE. For this purpose you will need to first pull the package from GitHub to a local directory (/GTE_DIR). In terminal:  
 ```bash
 git clone https://github.com/FlexTRKR/PyFLEXTRKR.git
 ```
-
-
-
-
-The he dependencies are listed in the pyproj.toml file and should install autmatically.
-The cloud tracking is based on the 
+With the git page cloned, simply change directory to the folder where you downloaded it and install the package:
+```bash
+cd /GTE_DIR
+pip install -e .
+```
+The dependencies are listed in the pyproj.toml file and should install automatically.
 ## 4. Running GTE
 
 ## 5. Code structure
