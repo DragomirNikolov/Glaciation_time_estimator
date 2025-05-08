@@ -13,10 +13,10 @@ from glaciation_time_estimator.data_preprocessing.File_name_generator import gen
 from glaciation_time_estimator.data_preprocessing.Output_file_generation import OutputResampledFile
 import warnings
 
-# global CLAAS_FP
-# CLAAS_FP = os.environ["CLAAS_DIR"]
-# if CLAAS_FP == "":
-#     raise ValueError("CLAAS_DIR is not defined")
+global CLAAS_FP
+CLAAS_FP = os.environ["CLAAS_DIR"]
+if CLAAS_FP == "":
+    raise ValueError("CLAAS_DIR is not defined")
 
 
 def fps_by_folder(fp_arr_target):
@@ -51,9 +51,7 @@ def dispatch(sem, argv, **kw):
         sem.release()
 
 # Used if Resample: False in the config file
-
-
-def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample_res_fps, grid_fp, n_threads=8):
+def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample_res_fps, n_threads=8):
     formatting_start_time = time.time()
     sem = threading.Semaphore(n_threads)   # pick a threshold here
 
@@ -68,8 +66,12 @@ def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample
         merged_fp = reformated_output_fp.removesuffix(".nc")+"_merged.nc"
         # cdo -chname,cph,cph_resampled -setgrid,/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid.txt -apply,-selname,cph [ CPPin20230101084500405SVMSGI1MD.nc ] test_1.nc
         os.makedirs(os.path.dirname(merged_fp), exist_ok=True)
+        argv = [["cdo", "merge", "-selname,ctt", ctx_fp, "-selname,cph", cpp_fp, merged_fp],
+                ["cdo", f"-chname,cph,cph_resampled", "-chname,ctt,ctt_resampled", "-setgrid,/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid.txt",
+=======
         argv = [["cdo", "-O", "merge", "-selname,ctt", ctx_fp, "-selname,cph", cpp_fp, merged_fp],
                 ["cdo", "-O", f"-chname,cph,cph_resampled", "-chname,ctt,ctt_resampled", f"-setgrid,{grid_fp}",
+>>>>>>> refs/remotes/origin/main
                     merged_fp, reformated_output_fp],
                 [merged_fp]]
         sem.acquire()
@@ -81,7 +83,7 @@ def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample
         T.join()
     formatting_end_time = time.time()
     print(
-        f"Formated day {folder_fp_ind} in {round(formatting_end_time - formatting_start_time,2)}s starting with fp: {folder_fps_CTX[folder_fp_ind][0]}")
+        f"Formated day {folder_fp_ind} in {round(formatting_start_time-formatting_end_time,2)}s starting with fp: {folder_fps_CTX[folder_fp_ind][0]}")
 
 
 # Used if Resample: True in the config file
@@ -128,6 +130,8 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
         f"Resampled day {folder_fp_ind} in {round(resample_end_time-day_start_time,2)}s starting with fp: {folder_fps_CTX[folder_fp_ind][0]}")
 
 
+
+#Aggregation using cdo
 def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, agg_fact, n_threads=8):
     agg_start_time = time.time()
     sem = threading.Semaphore(n_threads)   # pick a threshold here
@@ -166,8 +170,8 @@ def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, 
         f"Aggregated day {folder_fp_ind}/{len(folder_resample_res_fps)} in {round(agg_end_time - agg_start_time,2)}s\nStarting with {agg_res_fps[0]}")
 
 
-def filter_folder(day_fp_to_filter, temp_bounds, agg_fact, n_threads=4):
-    sem = threading.Semaphore(n_threads)   # pick a threshold here
+def filter_folder(day_fp_to_filter, temp_bounds, agg_fact):
+    sem = threading.Semaphore(4)   # pick a threshold here
     for temp_ind in range(len(temp_bounds[0])):
         min_temp = temp_bounds[0][temp_ind]
         max_temp = temp_bounds[1][temp_ind]
@@ -206,7 +210,7 @@ def prepare_pole(pole, target_filenames, config, n_workers):
                                      folder_resample_res_fps=folder_resample_res_fps, folder_agg_res_fps=folder_agg_res_fps, transformer=transformer)
     else:
         preparation_worker = partial(format_folder, folder_fps_CTX=folder_fps_CTX,
-                                     folder_fps_CPP=folder_fps_CPP, folder_resample_res_fps=folder_resample_res_fps, grid_fp=config["grid_fps"][pole], n_threads=n_threads)
+                                     folder_fps_CPP=folder_fps_CPP, folder_resample_res_fps=folder_resample_res_fps, n_threads=n_threads)
 
     aggregation_worker = partial(aggregte_folder, folder_resample_res_fps=folder_resample_res_fps,
                                  folder_agg_res_fps=folder_agg_res_fps, agg_fact=agg_fact, n_threads=n_threads)
@@ -266,7 +270,7 @@ def generate_filtered_files(config, target_filenames, t_deltas, agg_fact, n_work
         filter_start_time = time.time()
         pool = Pool(n_workers)
         pool.map(partial(filter_folder, temp_bounds=temp_bounds,
-                 agg_fact=agg_fact, n_threads=config['n_preproc_threads']), fps_by_folder(target_filenames[pole]["filter"]))
+                 agg_fact=agg_fact), fps_by_folder(target_filenames[pole]["filter"]))
         pool.close()
         pool.join()
         filter_end_time = time.time()
@@ -275,8 +279,6 @@ def generate_filtered_files(config, target_filenames, t_deltas, agg_fact, n_work
 
 
 def preprocessing_pipeline(config):
-    global CLAAS_FP
-    CLAAS_FP = config["CLAAS_fp"]
     t_deltas = config["t_deltas"]
     print("Generating target filenames")
     target_filenames = generate_filename_dict(config)
