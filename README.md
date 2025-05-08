@@ -21,9 +21,9 @@ With the git page cloned, simply change directory to the folder where you downlo
 cd /GTE_DIR
 pip install -e .
 ```
-The dependencies are listed in the pyproj.toml file and should install automatically.
+The dependencies are listed in the pyproject.toml file and should install automatically.
 ## 4. Running GTE
-
+If you intend to run the tracking you will first need to set up a TMP_DIR environemntal variable
 ## 5. Code structure
 The processing is divided into the following steps:
 
