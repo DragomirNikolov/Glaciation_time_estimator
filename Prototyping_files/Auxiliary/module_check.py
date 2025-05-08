@@ -1,3 +1,3 @@
-from Glaciation_time_estimator.Auxiliary_func.Helper_fun import generate_temp_range
+from glaciation_time_estimator.auxiliary_func.Helper_fun import generate_temp_range
 
 generate_temp_range([5])

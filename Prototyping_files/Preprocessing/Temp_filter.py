@@ -1,7 +1,7 @@
 import numpy as np
 import netCDF4 as nc
 # from ..Helper_fun import generate_temp_range
-from Glaciation_time_estimator.Data_preprocessing.Output_file_generation import OutputFilteredFile
+from glaciation_time_estimator.data_preprocessing.Output_file_generation import OutputFilteredFile
 # ==================================================
 # Filtering and formatting data
 # ==================================================

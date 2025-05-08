@@ -64,7 +64,7 @@ Resample: False
 agg_fact: 3
 # Total number of cores working on the preprocessing
 # To turn multiprocessing on set this to 1
-n_preproc_cores: 6
+n_preproc_cores: 2
 # Number of threads per core executing commands
 n_preproc_threads: 8
 
