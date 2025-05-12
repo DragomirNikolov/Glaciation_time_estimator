@@ -23,7 +23,10 @@ pip install -e .
 ```
 The dependencies are listed in the pyproject.toml file and should install automatically.
 ## 4. Running GTE
-If you intend to run the tracking you will first need to set up a TMP_DIR environemntal variable
+To run GTE you first need to have an appropriate config .yaml file. An example is given in "config.yaml". It is important to note that this configuratin file is seperate from the PyFLEXTRKR configuratin file used for the tracking algorithm.  
+If you intend to use the tracking portion of the library, you will also need to set a TMP_DIR environmental variable.  
+Currently, GTE is being run as a set of chained Slurm jobs (bash scripts). The job .bsub files and bash scripts, that submit multiple of these jobs at once, can be found in the "Slurm_jobs" folder. The bash scripts in "Slurm_jobs/0_combined" submit a series of chained preprocessing, tracking and postprocessing jobs which will output .parquet binaries (loaded as through pandas.read_parquet()) in a directory specified from the configuration file.
+
 ## 5. Code structure
 The processing is divided into the following steps:
 
