@@ -25,7 +25,7 @@ The dependencies are listed in the pyproject.toml file and should install automa
 ## 4. Running GTE
 There are 3 prerequisites to running a GTE job:
 1. **CLAAS 3 Data**  
-First, you will need to download parts of the [CLAAS 3 dataset](https://navigator.eumetsat.int/product/EO:EUM:DAT:0820). Once downloaded, the files you should keep the original name of the files and organise them in the following structure:  
+First, you will need to download parts of the [level 2 CLAAS 3 dataset](https://navigator.eumetsat.int/product/EO:EUM:DAT:0820). The analysis requires pecifically the *Instantaneous COT, CPH and CWP (CPP)* and *Instantaneous CTT, CTP and CTH (CTX)* products. Once downloaded, you should organise them in the following structure, keeping their original names:  
 CLAAS_fp/section/YYYY/MM/DD/CPP*.nc  
 CLAAS_fp/section/YYYY/MM/DD/CTX*.nc  
 The sections are different regions of the earth analysed, originally "np" and "sp", representing the northern and southern hemispheres. You can have as many sections as you like. In total, there should be 96 files per day per section. 
