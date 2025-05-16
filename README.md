@@ -24,8 +24,11 @@ pip install -e .
 The dependencies are listed in the pyproject.toml file and should install automatically.
 ## 4. Running GTE
 There are 3 prerequisites to running a GTE job:
-1. **CLAAS Data**  
-First, you will need to download parts of the CLAAS 3 dataset.
+1. **CLAAS 3 Data**  
+First, you will need to download parts of the [CLAAS 3 dataset](https://navigator.eumetsat.int/product/EO:EUM:DAT:0820). Once downloaded, the files you should keep the original name of the files and organise them in the following structure:  
+CLAAS_fp/section/YYYY/MM/DD/CPP*.nc  
+CLAAS_fp/section/YYYY/MM/DD/CTX*.nc  
+The sections are different regions of the earth analysed, originally "np" and "sp", representing the northern and southern hemispheres. You can have as many sections as you like. In total, there should be 96 files per day per section. 
 2. **Configuration file**  
 To run GTE you first need to have an appropriate config .yaml file. An example is given in "config.yaml". It is important to note that this configuration file is separate from the PyFLEXTRKR configuration file used for the tracking algorithm. If you want to simultaneously analyse a whole year of data, we recommend creating an reference configuration file and then using "/configs/config_generator.py" to create a folder with 24 setup files spaning a year. 
 3. **TMP_DIR environmental variable**  
