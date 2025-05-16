@@ -23,9 +23,18 @@ pip install -e .
 ```
 The dependencies are listed in the pyproject.toml file and should install automatically.
 ## 4. Running GTE
-To run GTE you first need to have an appropriate config .yaml file. An example is given in "config.yaml". It is important to note that this configuratin file is seperate from the PyFLEXTRKR configuratin file used for the tracking algorithm.  
-If you intend to use the tracking portion of the library, you will also need to set a TMP_DIR environmental variable.  
-Currently, GTE is being run as a set of chained Slurm jobs (bash scripts). The job .bsub files and bash scripts, that submit multiple of these jobs at once, can be found in the "Slurm_jobs" folder. The bash scripts in "Slurm_jobs/0_combined" submit a series of chained preprocessing, tracking and postprocessing jobs which will output .parquet binaries (loaded as through pandas.read_parquet()) in a directory specified from the configuration file.
+There are 3 prerequisites to running a GTE job:
+1. **CLAAS Data**
+First, you will need to download parts of the CLAAS 3 dataset.
+2. **Configuration file**
+To run GTE you first need to have an appropriate config .yaml file. An example is given in "config.yaml". It is important to note that this configuration file is separate from the PyFLEXTRKR configuration file used for the tracking algorithm. If you want to simultaneously analyse a whole year of data, we recommend creating an reference configuration file and then using "/configs/config_generator.py" to create a folder with 24 setup files spaning a year. 
+3. **TMP_DIR environmental variable**
+If you intend to use the tracking portion of the library, you will also need to set a TMP_DIR environmental variable. The files for every filtered frame will be temporarily copied to this directory during anlysis. On distributed this allows the algorithm to access files from local temporary memory on distributed systems, which is significantly faster than acccess from long-term storage. :
+```bash
+export TMP_DIR=/**YOUR TEMPORARY DIRECTORY**
+```
+
+Currently, GTE is being run as a set of chained Slurm jobs (bash scripts). The job .bsub files and other bash scripts, which can submit multiple of these jobs at once, can be found in the "Slurm_jobs" folder. The bash scripts in "Slurm_jobs/0_combined" use a dependency tree to submit a series of chaned preprocessing, tracking and postprocessing jobs which will output .parquet binaries (loaded as through pandas.read_parquet()) in a directory specified from the configuration file. The 
 
 ## 5. Code structure
 The processing is divided into the following steps:
