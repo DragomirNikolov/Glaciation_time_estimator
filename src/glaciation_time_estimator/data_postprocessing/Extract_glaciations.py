@@ -232,23 +232,23 @@ def save_glac_df(glaciations_df, config):
             glaciations_df.to_csv(output_dir_csv)
 
 
-def extract_glaciations(config):
-    sqrt_mse = config["Global_sqrt_mse"]
+def extract_glaciations_whole_year(config):
+    global global_rmse
+    global_rmse = config["Global_sqrt_mse"]
+    warnings.filterwarnings('ignore')
     # combined_cloud_df = get_combined_cloud_df(config)
-    combined_cloud_df = pd.read_parquet("/wolke_scratch/dnikolo/Final_results/2022_all.parquet")
+    year=config['start_time'].year
+    glac_tresh=0.4
+    combined_cloud_df = pd.read_parquet(os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_all.parquet"))
     print(combined_cloud_df)
-    glac_tresh=0.2
     result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=glac_tresh)
-    print(result_df)
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
-    glaciations_df.to_parquet(f"/wolke_scratch/dnikolo/Final_results/2022_glac_{int(glac_tresh*10):02}.parquet")
-    print(glaciations_df)
+    glaciations_df.to_parquet(os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_glac_{int(glac_tresh*10):02}.parquet"))
     # save_glac_df(glaciations_df, config)
 
 
 if __name__ == "__main__":
     config = read_config()
-    warnings.filterwarnings('ignore')
-    global global_rmse
-    global_rmse = config["Global_sqrt_mse"]
-    extract_glaciations(config)
+    
+    
+    extract_glaciations_whole_year(config)

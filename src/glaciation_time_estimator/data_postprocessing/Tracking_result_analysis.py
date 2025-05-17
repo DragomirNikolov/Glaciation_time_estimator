@@ -10,16 +10,16 @@ from multiprocessing import Manager, Pool
 from glaciation_time_estimator.auxiliary_func.Nestable_multiprocessing import NestablePool
 from functools import partial
 import os
-from memory_profiler import profile
-
+# from memory_profiler import profile
 
 
 # ---------- helper Numba types ----------
-coord_type    = types.UniTuple(types.int16, 2)        # (row, col)
-list_type     = types.ListType(coord_type)            # list of coordinates
-array2d_type  = types.int16[:, ::1]                   # (2, n_pts) C-contiguous
-dict_lists_t  = types.DictType(types.int64, list_type)
+coord_type = types.UniTuple(types.int16, 2)        # (row, col)
+list_type = types.ListType(coord_type)            # list of coordinates
+array2d_type = types.int16[:, ::1]                   # (2, n_pts) C-contiguous
+dict_lists_t = types.DictType(types.int64, list_type)
 dict_arrays_t = types.DictType(types.int64, array2d_type)
+
 
 @njit
 def extract_cloud_coordinates(cloudtracknumber_field,   # 3-D, shape (1, ny, nx)
@@ -35,8 +35,8 @@ def extract_cloud_coordinates(cloudtracknumber_field,   # 3-D, shape (1, ny, nx)
 
     # -- first pass: collect coordinates in typed.Lists --------------------
     coord_lists = typed.Dict.empty(                     # type: Dict[int, List[(int16,int16)]]
-        key_type   = types.int64,
-        value_type = list_type
+        key_type=types.int64,
+        value_type=list_type
     )
 
     ny, nx = cloudtracknumber_field.shape[1:]
@@ -56,13 +56,13 @@ def extract_cloud_coordinates(cloudtracknumber_field,   # 3-D, shape (1, ny, nx)
 
     # -- second pass: pack each list into a perfectly-sized 2×N array ------
     result = typed.Dict.empty(                     # type: Dict[int, int16[:,::1]]
-        key_type   = types.int64,
-        value_type = array2d_type
+        key_type=types.int64,
+        value_type=array2d_type
     )
 
     for cid in coord_lists:
         lst = coord_lists[cid]
-        n   = len(lst)
+        n = len(lst)
         arr = np.empty((2, n), dtype=np.int16)
 
         for i in range(n):
@@ -73,28 +73,6 @@ def extract_cloud_coordinates(cloudtracknumber_field,   # 3-D, shape (1, ny, nx)
         result[cid] = arr
 
     return result
-
-
-# @nb.njit
-# def extract_cloud_coordinates(cloudtracknumber_field, cloud_id_in_field, max_size):
-#     # Define the dictionary with the appropriate types
-#     loc_hash_map_cloud_numbers = {
-#         j: (0, np.zeros((2, max_size), dtype=np.int16)) for j in cloud_id_in_field}
-#     # # Traverse the 3D array
-#     # for i in cloud_id_in_field:
-#     #     loc_hash_map_cloud_numbers[val] = (0,np.empty((2,max_size),dtype=np.int16))
-#     for row in range(cloudtracknumber_field.shape[1]):
-#         for col in range(cloudtracknumber_field.shape[2]):
-#             val = cloudtracknumber_field[0, row, col]
-#             if val != 0:
-#                 ind, cord = loc_hash_map_cloud_numbers[val]
-#                 if ind <= max_size:
-#                     cord[:, ind] = np.asarray([row, col], dtype=np.int16)
-#                     ind += 1
-#                     # print(ind)
-#                     loc_hash_map_cloud_numbers[val] = (ind, cord)
-#     return loc_hash_map_cloud_numbers
-#     # return loc_hash_map_cloud_numbers
 
 
 class CoordinateTransformer:
@@ -126,43 +104,46 @@ def extract_value(val):
         return val.values.item() if val.size == 1 else val.values
     return val
 
-
-# def extract_cpp_vars(time, pole, config):
-#     if time>config["struct_boundary_date"]:
-#         cpp_filename = time.strftime("CPPin%Y%m%d%H%M%S405SVMSGI1MD.nc")
-#     else:
-#         cpp_filename = time.strftime("CPPin%Y%m%d%H%M%S405SVMSG01MD.nc")
-#     with xr.load_dataset(os.path.join(os.environ["TMPDIR"], "Data", pole, cpp_filename)) as cpp_data:
-#         return cpp_data['cot'],cpp_data['cwp']
-
-def extract_cpp_vars(time, pole, config):
-    if time>config["struct_boundary_date"]:
-        cpp_filename = time.strftime("%Y/%m/%d/CPPin%Y%m%d%H%M%S405SVMSGI1MD.nc")
-    else:
-        cpp_filename = time.strftime("%Y/%m/%d/CPPin%Y%m%d%H%M%S405SVMSG01MD.nc")
-    # with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, cpp_filename), chunks="auto") as cpp_data:
-    with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, cpp_filename)) as cpp_data:
-        return cpp_data['cot'],cpp_data['cwp']
+# In wgs84
 
 
-# def extract_ctx_vars(time, pole, config):
-#     if time>config["struct_boundary_date"]:
-#         ctx_filename = time.strftime("CTXin%Y%m%d%H%M%S405SVMSGI1MD.nc")
-#     else:
-#         ctx_filename = time.strftime("CTXin%Y%m%d%H%M%S405SVMSG01MD.nc")
-#     with xr.load_dataset(os.path.join(os.environ["TMPDIR"], "Data", pole, ctx_filename)) as ctx_data:
-#         return ctx_data['ctp']
-    # print(f'{min_temp} to {max_temp} Loading {time_str}')
-# /cluster/work/climate/dnikolo/dump/Data/np/CPPin20210101000000405SVMSGI1MD.nc
+class LatLonCoordinates:
+    def __init__(self, lat, lon, is_resampled, agg_fact, pole, temp_key, tracking_fps):
+        try:
+            with xr.open_dataset(tracking_fps[pole][temp_key]["cloudtracks"][0]) as cloudtrack_data:
+                if is_resampled:
+                    self.lat = cloudtrack_data['lat'].load()
+                    self.lon = cloudtrack_data['lon'].load()
+                    self._extract_resampled_coord()
+                else:
+                    self.lat = lat
+                    self.lon = lon
+                    self.coord_transformer = CoordinateTransformer(
+                        lon.shape[1:], agg_fact)
+        except Exception as e:
+            raise RuntimeError(f"Skipping {pole} {temp_key} due to error: {e}")
 
-def extract_ctx_vars(time, pole, config):
-    if time>config["struct_boundary_date"]:
-        ctx_filename = time.strftime("%Y/%m/%d/CTXin%Y%m%d%H%M%S405SVMSGI1MD.nc")
-    else:
-        ctx_filename = time.strftime("%Y/%m/%d/CTXin%Y%m%d%H%M%S405SVMSG01MD.nc")
-    # with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename),chunks="auto") as ctx_data:
-    with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename)) as ctx_data:
-        return ctx_data['ctp']
+    def _extract_resampled_coord(self):
+        self.lat_resolution = (self.lat.max()-self.lat.min())/len(self.lat)
+        self.lon_resolution = (self.lon.max()-self.lon.min())/len(self.lon)
+
+
+def extract_tracknumbers_data(pole, temp_key, tracking_fps):
+    try:
+        with xr.open_dataset(tracking_fps[pole][temp_key]["tracknumbers"]) as tracknumbers_data:
+            return pd.to_datetime(tracknumbers_data['basetimes'])
+    except Exception as e:
+        print(f"Skipping {pole} {temp_key} due to error: {e}")
+        return None
+
+
+def extract_trackstats(pole, temp_key, tracking_fps):
+    try:
+        with xr.open_dataset(tracking_fps[pole][temp_key]["trackstats_final"]) as trackstats_data:
+            return trackstats_data.variables['track_duration'].shape[0]
+    except Exception as e:
+        print(f"Skipping {pole} {temp_key} due to error: {e}")
+        return None
 
 
 def extract_cloud_number_field(cloudtrack_data):
@@ -171,14 +152,50 @@ def extract_cloud_number_field(cloudtrack_data):
     return cloudtracknumber_field.astype(int)
 
 
+def extract_cpp_vars(time, pole, config):
+    if time > config["struct_boundary_date"]:
+        cpp_filename = time.strftime(
+            "%Y/%m/%d/CPPin%Y%m%d%H%M%S405SVMSGI1MD.nc")
+    else:
+        cpp_filename = time.strftime(
+            "%Y/%m/%d/CPPin%Y%m%d%H%M%S405SVMSG01MD.nc")
+    # with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, cpp_filename), chunks="auto") as cpp_data:
+    with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, cpp_filename)) as cpp_data:
+        return cpp_data['cot'].values, cpp_data['cwp'].values
+
+
+def extract_ctx_vars(time, pole, config):
+    if time > config["struct_boundary_date"]:
+        ctx_filename = time.strftime(
+            "%Y/%m/%d/CTXin%Y%m%d%H%M%S405SVMSGI1MD.nc")
+    else:
+        ctx_filename = time.strftime(
+            "%Y/%m/%d/CTXin%Y%m%d%H%M%S405SVMSG01MD.nc")
+    # with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename),chunks="auto") as ctx_data:
+    with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename)) as ctx_data:
+        return ctx_data['ctp'].values
+
+
+def extract_aux_vars(aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr):
+    ind1 = cloud_location_ind_non_agg[0]
+    ind2 = cloud_location_ind_non_agg[1]
+    return pix_arr[aux_ind, ind1, ind2], lat_arr[aux_ind, ind1, ind2], lon_arr[aux_ind, ind1, ind2]
+
+
+def extract_additional_values(cot_arr, ctp_arr, cloud_location_ind_non_agg):
+    ind1 = cloud_location_ind_non_agg[0]
+    ind2 = cloud_location_ind_non_agg[1]
+    return cot_arr[0, ind1, ind2], ctp_arr[0, ind1, ind2]
+
+
 def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
-    columns = ["is_large_pix_cloud", "is_cot_valid_cloud","is_ctp_valid_cloud", "is_liq", "is_mix", "is_ice", "max_water_frac",
+    columns = ["is_large_pix_cloud", "is_cot_valid_cloud", "is_ctp_valid_cloud", "is_liq", "is_mix", "is_ice", "max_water_frac",
                "max_ice_fraction", "avg_size[km]", "max_size[km]",
                "min_size[km]", "avg_size[px]", "max_size[px]",
-               "min_size[px]", "track_start_time", "track_length", "avg_cot","avg_ctp",
+               "min_size[px]", "track_start_time", "track_length", "avg_cot", "avg_ctp",
                "glaciation_start_time", "glaciation_end_time", "avg_lat",
                "avg_lon", "start_ice_fraction", "end_ice_fraction",
-               "ice_frac_hist", "cot_hist", "cot_nan_frac_hist","ctp_hist", "ctp_nan_frac_hist", "lat_hist", "lon_hist",
+               "ice_frac_hist", "cot_hist", "cot_nan_frac_hist", "ctp_hist", "ctp_nan_frac_hist", "lat_hist", "lon_hist",
                "size_hist_km"]
     datapoints_per_cloud = len(columns)
     cloudinfo_df = pd.DataFrame(
@@ -239,82 +256,77 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
         output_dir_csv = output_dir + ".csv"
         cloudinfo_df.to_csv(output_dir_csv)
 
-@profile
-def analize_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area=None,  lon=None, lat=None) -> None:
-    # loop_start_time=dt.datetime.now()
+
+# @profile
+def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area=None,  lon=None, lat=None) -> None:
+    # Load configuration parameters
     min_temp, max_temp = config['min_temp_arr'][temp_ind], config['max_temp_arr'][temp_ind]
+    abs_min_temp, abs_max_temp = abs(round(min_temp)), abs(round(max_temp))
     is_resampled = config["Resample"]
     collect_cot = config["collect_additional_properties"]
-    
+    temp_key = f'{abs_min_temp}_{abs_max_temp}'
+
     # Load datasets
-    temp_key = f'{abs(round(min_temp))}_{abs(round(max_temp))}'
-    print(f"Analyzing {pole} {temp_key}")
-    # print(tracking_fps[pole][temp_key]["cloudtracks"][0])
-    # print(tracking_fps[pole][temp_key]["trackstats_final"])
-    # print(tracking_fps[pole][temp_key]["tracknumbers"])
     try:
-        # print(tracking_fps[pole][temp_key]["cloudtracks"][0])
-        cloudtrack_data = xr.load_dataset(
-            tracking_fps[pole][temp_key]["cloudtracks"][0])
-        trackstats_data = xr.load_dataset(
-            tracking_fps[pole][temp_key]["trackstats_final"])
-        tracknumbers_data = xr.load_dataset(
-            tracking_fps[pole][temp_key]["tracknumbers"])
+        cords = LatLonCoordinates(
+            lat, lon, is_resampled, config['agg_fact'], pole, temp_key, tracking_fps)
+        lat_arr = cords.lat.values if cords.lat is not None else None
+        lon_arr = cords.lon.values if cords.lon is not None else None
     except Exception as e:
-        print(f"Skipping {pole} {min_temp} to {max_temp} due to error: {e}")
-        # cloud_dict[temp_key] = np.array([])
+        print(f"{e}")
         return None
-    # Load relevant data from datasets into local variables
-    n_tracks = trackstats_data.variables['track_duration'].shape[0]
-    basetimes = pd.to_datetime(tracknumbers_data['basetimes'])
-    if is_resampled:
-        lat = cloudtrack_data['lat']
-        lon = cloudtrack_data['lon']
-        lat_resolution = (lat.max()-lat.min())/len(lat)
-        lon_resolution = (lon.max()-lon.min())/len(lon)
-    else:
-        coord_transformer = CoordinateTransformer(
-            lon.shape[1:], config["agg_fact"])
-    trackstats_data.close()
-    tracknumbers_data.close()
-    cloudtrack_data.close()
-    # print(append_start_time-loop_start_time)
+    basetimes = extract_tracknumbers_data(pole, temp_key, tracking_fps)
+    n_tracks = extract_trackstats(pole, temp_key, tracking_fps)
+    if basetimes is None or n_tracks is None:
+        return None
+
+    print(f"Analyzing {pole} {temp_key} with {n_tracks} tracks")
+
     cloud_arr = np.empty((n_tracks), dtype=Cloud)
     for i in range(n_tracks):
         cloud_arr[i] = None
+
     # Cloud(f'{temp_ind}_{i}') for i in range(n_tracks)])
-    # print(append_end_time-append_start_time)
     # print(f"Analyzing T: {min_temp} to {max_temp} Agg={config['agg_fact']}")
+
+    pix_arr = pix_area.values if pix_area is not None else None
+
     for fp_ind in range(len(basetimes)):
         time = basetimes[fp_ind]
         time_str = time.strftime("%Y%m%d_%H%M%S")
-        if time>config["struct_boundary_date"]:
-            aux_ind = 1
-        else:
-            aux_ind = 0
-        print(f'{min_temp} to {max_temp} Loading {time_str}')
+        # print(f'{min_temp} to {max_temp} Loading {time_str}')
+
+        aux_ind = 1 if time > config["struct_boundary_date"] else 0
+
         if collect_cot:
-            cot_field,cwp_field = extract_cpp_vars(time, pole, config)
-            ctp_field  = extract_ctx_vars(time, pole, config)
+            cot_arr, cwp_arr = extract_cpp_vars(time, pole, config)
+            ctp_arr = extract_ctx_vars(time, pole, config)
+
         cloudtrack_fp = tracking_fps[pole][temp_key]['cloudtracks'][fp_ind]
-        cloudtrack_data = xr.load_dataset(cloudtrack_fp)
-        cloudtracknumber_field = extract_cloud_number_field(cloudtrack_data)
-        cph_field = cloudtrack_data['cph_filtered']
-        cloud_id_in_field, counts = np.unique(
-            cloudtracknumber_field, return_counts=True)
-        counts = counts[cloud_id_in_field != 0]
-        if len(counts) == 0:
-            print(f"{pole} - {min_temp} to {max_temp}: No cloud timestep: {time_str}")
-            continue
-        cloud_id_in_field = cloud_id_in_field[cloud_id_in_field != 0]
-        max_allowed_cloud_size_px = config['fast_mode_arr_size'] if config['postprocessing_fast_mode'] else counts.max(
-        )
-        hash_map_cloud_numbers = extract_cloud_coordinates(
-            cloudtracknumber_field, cloud_id_in_field, max_allowed_cloud_size_px)  # counts.max())
-        cloudtrack_data.close()
+
+        with xr.open_dataset(cloudtrack_fp) as cloudtrack_data:
+            cph_arr = cloudtrack_data['cph_filtered'].values
+            cloudtracknumber_field = extract_cloud_number_field(
+                cloudtrack_data)
+            cloud_id_in_field, counts = np.unique(
+                cloudtracknumber_field, return_counts=True)
+            counts = counts[cloud_id_in_field != 0]
+            if len(counts) == 0:
+                print(
+                    f"{pole} - {min_temp} to {max_temp}: No cloud timestep: {time_str}")
+                continue
+            cloud_id_in_field = cloud_id_in_field[cloud_id_in_field != 0]
+            max_allowed_cloud_size_px = config['fast_mode_arr_size'] if config['postprocessing_fast_mode'] else counts.max(
+            )
+            hash_map_cloud_numbers = extract_cloud_coordinates(
+                cloudtracknumber_field, cloud_id_in_field, max_allowed_cloud_size_px)  # counts.max())
+            del cloudtracknumber_field
+
+        # print(f"N_clouds in frame {len(cloud_id_in_field)}", flush=True)
         if max_allowed_cloud_size_px > 1000000:
             print(np.where(counts, counts == counts.max()))
         # print(cloud_id_in_field)
+
         for track_number in cloud_id_in_field:
 
             try:
@@ -328,14 +340,11 @@ def analize_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
             if (not cloud_arr[track_number-1].terminate_cloud):
                 # TODO:SPEED UP NEXT TWO LINES (set_cloud_values and update_status)
                 cord = hash_map_cloud_numbers[track_number]
-
                 cloud_location_ind = [cord[0, :], cord[1, :]]
+
                 if cloud_location_ind[0].size != 0:
-                    # cloud_cph_values = cph_field.values[0,
-                                                        # cloud_location_ind[0].T, cloud_location_ind[1].T]
-                    cloud_cph_values = cph_field.isel(time=0,
-                                  lat=xr.DataArray(cloud_location_ind[0].T, dims="points"),
-                                  lon=xr.DataArray(cloud_location_ind[1].T, dims="points")).values
+                    cloud_cph_values = cph_arr[0,
+                                               cloud_location_ind[0].T, cloud_location_ind[1].T]
                     if is_resampled:
                         avg_lat_ind = int(
                             round(np.mean(cloud_location_ind[0])))
@@ -343,52 +352,30 @@ def analize_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                             round(np.mean(cloud_location_ind[1])))
                         # TODO:SPEED UP NEXT TWO LINES (set_cloud_values and update_status)
                         cloud_arr[track_number-1].update_status(
-                            time, cloud_cph_values, extract_value(lat[avg_lat_ind]), extract_value(lon[avg_lon_ind]), pixel_area=lat_resolution.values*lon_resolution.values)
+                            time, cloud_cph_values, extract_value(cords.lat[avg_lat_ind]), extract_value(cords.lon[avg_lon_ind]), pixel_area=cords.lat_resolution.values*cords.lon_resolution.values)
                     else:
-                        cloud_location_ind_non_agg = coord_transformer.transform(
+                        cloud_location_ind_non_agg = cords.coord_transformer.transform(
                             cloud_location_ind[0], cloud_location_ind[1])
-                        
-                        cloud_pix_area_values = pix_area.values[aux_ind,
-                                                                cloud_location_ind_non_agg[0], cloud_location_ind_non_agg[1]]
-                        # cloud_pix_area_values = pix_area.isel(time=0,
-                        #     lat=xr.DataArray(cloud_location_ind_non_agg[0], dims="points"),
-                        #     lon=xr.DataArray(cloud_location_ind_non_agg[1], dims="points")).values
-                        cloud_lat_values = lat.values[aux_ind,
-                                                      cloud_location_ind_non_agg[0], cloud_location_ind_non_agg[1]]
-                        cloud_lon_values = lon.values[aux_ind,
-                                                      cloud_location_ind_non_agg[0], cloud_location_ind_non_agg[1]]
+                        cloud_pix_area_values, cloud_lat_values, cloud_lon_values = extract_aux_vars(
+                            aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr)
                         if collect_cot:
-                            # cloud_cot_values = cot_field.values[0,
-                            #                                     cloud_location_ind_non_agg[0], cloud_location_ind_non_agg[1]]
-                            cloud_cot_values = cot_field.isel(time=0,
-                                y=xr.DataArray(cloud_location_ind_non_agg[0], dims="points"),
-                                x=xr.DataArray(cloud_location_ind_non_agg[1], dims="points")).values
-                            # cloud_ctp_values = ctp_field.values[0,
-                            #                                     cloud_location_ind_non_agg[0], cloud_location_ind_non_agg[1]]
-                            cloud_ctp_values = ctp_field.isel(time=0,
-                                y=xr.DataArray(cloud_location_ind_non_agg[0], dims="points"),
-                                x=xr.DataArray(cloud_location_ind_non_agg[1], dims="points")).values
+                            cloud_cot_values, cloud_ctp_values = extract_additional_values(
+                                cot_arr, ctp_arr, cloud_location_ind_non_agg)
                         else:
-                            cloud_cot_values = np.array([0])
-                            cloud_ctp_values = np.array([0])
+                            cloud_cot_values, cloud_ctp_values = np.array(
+                                [0]), np.array([0])
                         # print(np.info(cloud_cot_values))
                         cloud_arr[track_number-1].update_status(
                             time, cloud_cph_values, cloud_cot_values, cloud_ctp_values, cloud_lat_values, cloud_lon_values, cloud_pix_area_values)
-                        
+
                 else:
                     cloud_arr[track_number-1].update_missing_cloud()
-        del ctp_field
-        del cph_field
-        del cwp_field
-        del cot_field
-        del cloud_cot_values
-        del cloud_ctp_values
-        del cloud_pix_area_values
-        del cloud_lat_values
-        del cloud_lon_values
-        del cloud_location_ind
-        del cloud_location_ind_non_agg
-        del cloud_cph_values
+
+        del ctp_arr, cph_arr, cwp_arr, cot_arr
+        del cloud_cot_values, cloud_ctp_values, cloud_cph_values
+        del hash_map_cloud_numbers
+        del cloud_location_ind, cloud_location_ind_non_agg
+        del cloud_pix_area_values, cloud_lat_values, cloud_lon_values
     save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config)
 
 
@@ -398,7 +385,7 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config, n_procs=6):
     if config["Resample"]:
         with Pool(n_procs) as pool:
             part_single_temp_range = partial(
-                analize_single_temp_range, tracking_fps=tracking_fps, pole=pole, config=config)
+                analyze_single_temp_range, tracking_fps=tracking_fps, pole=pole, config=config)
             pool.map(part_single_temp_range, range(
                 len(config['min_temp_arr'])))
             pool.close()
@@ -407,15 +394,15 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config, n_procs=6):
         lat_mat = aux_ds["lat"].load()
         lon_mat = aux_ds["lon"].load()
         pix_area = aux_ds["pixel_area"].load()
+        part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
+                                         pole=pole, config=config, pix_area=pix_area, lon=lon_mat, lat=lat_mat)
         with Pool(n_procs) as pool:
-            part_single_temp_range = partial(
-                analize_single_temp_range, tracking_fps=tracking_fps, pole=pole, config=config, pix_area=pix_area, lon=lon_mat, lat=lat_mat)
-            # pool.map(part_single_temp_range, range(
-            #     len(config['min_temp_arr'])))
-            # pool.close()
-            # pool.join()
-            for ind in range(len(config['min_temp_arr'])):
-                part_single_temp_range(ind)
+            pool.map(part_single_temp_range, range(
+                len(config['min_temp_arr'])))
+            pool.close()
+            pool.join()
+        # for ind in range(len(config['min_temp_arr'])):
+        #     part_single_temp_range(ind)
 
 # def save_results(res_dict, config):
 #     min_temp, max_temp = config['min_temp_arr'][0], config['max_temp_arr'][0]
@@ -495,21 +482,22 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config, n_procs=6):
 #                 output_dir_csv = output_dir + ".csv"
 #                 cloudinfo_df.to_csv(output_dir_csv)
 
+
 def analyze_tracked_clouds(config):
-    tracking_fps = generate_tracking_filenames(config)
+    tracking_fps=generate_tracking_filenames(config)
     with Manager() as manager:
-        cloud_dict = manager.dict()
+        cloud_dict=manager.dict()
         # TODO: Paralelize here
-        part_analize_single_pole = partial(
+        part_analize_single_pole=partial(
             analize_single_pole, cloud_dict=cloud_dict, tracking_fps=tracking_fps, config=config)
         # with NestablePool(2) as pool:
         #     pool.map(part_analize_single_pole, config['pole_folders'])
         #     pool.close()
         #     pool.join()
-        for pole in  config['pole_folders']:
+        for pole in config['pole_folders']:
             part_analize_single_pole(pole)
 
 
 if __name__ == "__main__":
-    config = read_config()
+    config=read_config()
     analyze_tracked_clouds(config)

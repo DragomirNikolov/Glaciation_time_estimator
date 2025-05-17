@@ -37,8 +37,8 @@ aux_fps_eu:
 #Location of the files used for the temporary grid when resampling is turned off
 grid_fps:
   {
-    "np": "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Data_preprocessing/grid_np.txt",
-    "sp": "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Data_preprocessing/grid_sp.txt"
+    "np": "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/grids/grid_np.txt",
+    "sp": "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/grids/grid_sp.txt"
   }
 
 # File path of the CLAAS dataset that contains the pole(hemisphere) folders

@@ -6,9 +6,11 @@ Create 24 half‑monthly tracking‑config YAMLs for a given YEAR.
 
 Example
 -------
-python generate_configs.py 2007 \
-    /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/April_testing/euler_template.yaml \
+python /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/config_generator.py 2007 \
+    /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/2007_tracking/01_01.yaml \
     /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs
+
+/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/April_testing/euler_template.yaml \
 """
 import argparse
 import os

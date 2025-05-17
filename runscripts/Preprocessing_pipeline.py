@@ -13,10 +13,10 @@ from glaciation_time_estimator.data_preprocessing.File_name_generator import gen
 from glaciation_time_estimator.data_preprocessing.Output_file_generation import OutputResampledFile
 import warnings
 
-global CLAAS_FP
-CLAAS_FP = os.environ["CLAAS_DIR"]
-if CLAAS_FP == "":
-    raise ValueError("CLAAS_DIR is not defined")
+# global CLAAS_FP
+# CLAAS_FP = os.environ["CLAAS_DIR"]
+# if CLAAS_FP == "":
+#     raise ValueError("CLAAS_DIR is not defined")
 
 
 def fps_by_folder(fp_arr_target):
@@ -164,8 +164,8 @@ def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, 
         f"Aggregated day {folder_fp_ind}/{len(folder_resample_res_fps)} in {round(agg_end_time - agg_start_time,2)}s\nStarting with {agg_res_fps[0]}")
 
 
-def filter_folder(day_fp_to_filter, temp_bounds, agg_fact):
-    sem = threading.Semaphore(4)   # pick a threshold here
+def filter_folder(day_fp_to_filter, temp_bounds, agg_fact, n_threads=8):
+    sem = threading.Semaphore(n_threads)   # pick a threshold here
     for temp_ind in range(len(temp_bounds[0])):
         min_temp = temp_bounds[0][temp_ind]
         max_temp = temp_bounds[1][temp_ind]
@@ -264,7 +264,7 @@ def generate_filtered_files(config, target_filenames, t_deltas, agg_fact, n_work
         filter_start_time = time.time()
         pool = Pool(n_workers)
         pool.map(partial(filter_folder, temp_bounds=temp_bounds,
-                 agg_fact=agg_fact), fps_by_folder(target_filenames[pole]["filter"]))
+                 agg_fact=agg_fact, n_threads = config["n_preproc_threads"]), fps_by_folder(target_filenames[pole]["filter"]))
         pool.close()
         pool.join()
         filter_end_time = time.time()
@@ -274,15 +274,20 @@ def generate_filtered_files(config, target_filenames, t_deltas, agg_fact, n_work
 
 def preprocessing_pipeline(config):
     t_deltas = config["t_deltas"]
+    global CLAAS_FP
+    CLAAS_FP = config["CLAAS_fp"]
+    if CLAAS_FP == "":
+        raise ValueError("CLAAS_DIR is not defined")
     print("Generating target filenames")
     target_filenames = generate_filename_dict(config)
     # print(target_filenames)
     print("Target filenames generated")
     print("Resampling needed files")
+    
     prepare_all_files(target_filenames, config)
     print("Needed files resampled. Start filtering")
     generate_filtered_files(config, target_filenames, t_deltas,
-                            agg_fact=config['agg_fact'])
+                            agg_fact=config['agg_fact'],n_workers=config["n_preproc_cores"])
     print("Filtering complete")
 
 

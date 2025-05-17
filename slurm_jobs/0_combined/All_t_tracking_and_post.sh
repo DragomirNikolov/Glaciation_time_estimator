@@ -1,8 +1,11 @@
 #!/bin/bash
 
-while getopts 'c:' flag; do
+while getopts 'c:d:y:w:' flag; do
     case "${flag}" in
     c) GTE_CONFIG_DIR=${OPTARG};;
+    d) init_dependency=${OPTARG};;
+    y) YEAR=${OPTARG};;
+    w) wait_time=${OPTARG};;
     *)
         print_usage
         exit 1
@@ -25,18 +28,32 @@ for dt in 6; do
         # max = min - dt because we deal with absolutes of negative numbers
         max_temp=$((min_temp - dt))
         for pole in "np" "sp"; do
-            name=T_"$min_temp"_"$max_temp"_"$agg_fact"_"$pole"_"${config_name::-5}"
-            job_id=$(sbatch --parsable -J "$name" "$GTE_DIR"/2_tracking/tracking_job.bsub -h $max_temp -l $min_temp -p $pole -c $GTE_CONFIG_DIR)
+            if [ -z "$YEAR" ]; then
+                name=T_"$min_temp"_"$max_temp"_"$agg_fact"_"$pole"_"${config_name::-5}"
+            else
+                name=T_"$min_temp"_"$max_temp"_"$agg_fact"_"$pole"_"${config_name::-5}"_"$YEAR"
+            fi
+            if [ -z "$init_dependency" ]; then
+                if [ -z "$wait_time" ]; then
+                    job_id=$(sbatch --parsable -J "$name" "$GTE_DIR"slurm_jobs/2_tracking/tracking_job.bsub -h $max_temp -l $min_temp -p $pole -c $GTE_CONFIG_DIR)
+                else
+                    # compute how many minutes to wait
+                    job_id=$(sbatch --parsable --begin=now+${wait_time}minutes -J "$name" "$GTE_DIR"slurm_jobs/2_tracking/tracking_job.bsub -h $max_temp -l $min_temp -p $pole -c $GTE_CONFIG_DIR)
+                fi
+            else
+                job_id=$(sbatch --parsable -J "$name" --dependency=afterok:$init_dependency "$GTE_DIR"slurm_jobs/2_tracking/tracking_job.bsub -h $max_temp -l $min_temp -p $pole -c $GTE_CONFIG_DIR)
+            fi
             job_ids+=("$job_id")
-            echo "Submited: ${name} Job ID: ${job_id}"
+            echo "Submited tracking job: ${name}"
         done
     done
 done
 
-postproc_name="${config_name::-5}_postproc"
+postproc_name="${config_name::-5}_${YEAR}_postproc"
 # Submit post-processing job after all jobs have completed
 if [ ${#job_ids[@]} -gt 0 ]; then
     dependency_list=$(IFS=,; echo "${job_ids[*]}")
-    sbatch --parsable --dependency=afterok:$dependency_list -J "$postproc_name" "$GTE_DIR"/3_postprocessing/postproc_job.bsub -c $GTE_CONFIG_DIR
-    echo "Post-processing job submitted with ID: $postproc_name"
+    postproc_job_id=$(sbatch --parsable --dependency=afterok:$dependency_list -J "$postproc_name" "$GTE_DIR"slurm_jobs/3_postprocessing/postproc_job.bsub -c $GTE_CONFIG_DIR)
+    echo "Post-processing job submitted with ID: $postproc_job_id"
+    # echo "$postproc_job_id"
 fi

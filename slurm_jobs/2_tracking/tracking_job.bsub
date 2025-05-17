@@ -2,11 +2,11 @@
 #SBATCH -J test_pyflextrkr
 #SBATCH -t 05:00:00
 #SBATCH -N 1
-#SBATCH -n 24
+#SBATCH -n 8
 #SBATCH -q debug
-#SBATCH --mem-per-cpu=4096
+#SBATCH --mem-per-cpu=12096
 #SBATCH --tmp=50240
-#SBATCH --mail-type=END,FAIL
+#SBATCH --mail-type=FAIL
 #SBATCH --output=/cluster/work/climate/dnikolo/Job_output/Output/%x.%j.out
 #SBATCH --error=/cluster/work/climate/dnikolo/Job_output/Error/%x.%j.err
 
@@ -50,8 +50,9 @@ module load stack/2024-06 gcc/12.2.0 openmpi/4.1.6 nco ffmpeg/6.0 #python/3.11.6
 #Load pyflextrkr python
 source "${ENV_BIN_DIR}"/activate
 #Copy files to local scratch, create result directory and generate setup.yml
+mkdir -p $RESULT_DIR
 cd "$RESULT_DIR" || exit
-python $GTE_DIR/runscripts/Tracking_pipeline.py -t "$min_temp" "$max_temp" -p $pole -bc "${GTE_DIR}/Cloud_tracking/custom_setup.yml" -rd "${RESULT_DIR}/" -cf $GTE_CONFIG_DIR
+python $GTE_DIR/runscripts/Tracking_pipeline.py -t "$min_temp" "$max_temp" -p $pole -bc "${GTE_DIR}/configs/pyflextrkr_config/custom_setup.yml" -rd "${RESULT_DIR}/" -cf $GTE_CONFIG_DIR
 
 
 # # #Run PyFLEXTRKR

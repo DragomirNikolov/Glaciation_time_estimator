@@ -3,6 +3,11 @@ Add config_file
 
 
 Make glac threshold a variable
+Fix hard paths in glaciation stuff
+Make configs folder a variable
+Make multiprocessing threads a variable 
+Make posptrcessing cores a seperate variable
+
 Add reference for peak identification
 update setup.py link
 Make whole program a package
