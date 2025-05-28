@@ -19,13 +19,14 @@ def Extract_array_from_df(series: pd.Series):
 
 class Peak:
     def __init__(self, startidx):
+        # Needed to define the 
         self.born = self.left = self.right = startidx
         self.died = None
-
+    # Returns the persistence of the peak
     def get_persistence(self, seq):
         return float("inf") if self.died is None else seq[self.born] - seq[self.died]
 
-
+# Get the peaks in an IF history
 def get_persistent_homology(seq):
     peaks = []
     # Maps indices to peaks
@@ -73,9 +74,10 @@ def get_persistent_homology(seq):
     # return idxtopeak, sorted(peaks, key=lambda p: -p.born, reverse=True)
     return peaks
 
-
+# A class to hold glaciation information
 class Glaciation:
     def __init__(self, min_ind, max_ind, data, timestep=15):
+        # Initialize the glaciation with the indices of the minimum and maximum ice fraction during the glaciation
         self.max = data[max_ind]
         self.min = data[min_ind]
         self.min_ind = min_ind
@@ -108,7 +110,7 @@ class Glaciation:
                 dIFdt_glac = dIFdt[self.min_ind:self.max_ind+1]
                 dIFdt_glac *= self.magnitude/(cumulative_trapezoid(dIFdt_glac, t[self.min_ind:self.max_ind+1], initial=0)[-1])
 
-                #Factor *4/3 added: 4 to convert to hours  and 3 to correct for the factor added above
+                #Factor *4/3 added: 4 to convert to hours  and 3 to correct for the "magical factor" added above
                 dIFdt_glac *= 60/self.timestep/magical_factor
                 #Not sure about min rate to take
                 self.rate_arr=dIFdt_glac[dIFdt_glac>1e-2]
