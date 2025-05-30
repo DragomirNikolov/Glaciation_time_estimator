@@ -188,7 +188,7 @@ def extract_additional_values(cot_arr, ctp_arr, ctt_arr, cloud_location_ind_non_
 
 
 def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
-    columns = ["is_large_pix_cloud", "is_cot_valid_cloud", "is_ctp_valid_cloud", "is_liq", "is_mix", "is_ice", "max_water_frac",
+    columns = ["tracknumber","is_large_pix_cloud", "is_cot_valid_cloud", "is_ctp_valid_cloud", "is_liq", "is_mix", "is_ice", "max_water_frac",
                "max_ice_fraction", "avg_size[km]", "max_size[km]",
                "min_size[km]", "avg_size[px]", "max_size[px]",
                "min_size[px]", "track_start_time", "track_length", "avg_cot", "avg_ctp", "avg_ctt",
@@ -203,6 +203,7 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
         current_cloud = cloud_arr[cloud_ind]
         if current_cloud is not None:
             cloudinfo_df.iloc[cloud_ind] = [
+                current_cloud.id,
                 current_cloud.large_pixel_cloud,
                 current_cloud.valid_cot_cloud,
                 current_cloud.valid_ctp_cloud,
@@ -335,7 +336,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
 
             try:
                 if cloud_arr[track_number-1] is None:
-                    cloud_arr[track_number-1] = Cloud(temp_key, is_resampled)
+                    cloud_arr[track_number-1] = Cloud(track_number, is_resampled)
             except:
                 print(
                     f"Error: {temp_ind,track_number,len(cloud_arr)}")
