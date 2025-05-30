@@ -1,5 +1,9 @@
 Add config_file
 
+Add removal of n2o files
+Visualize glaciation event
+add additional capabilities in postprocessings
+
 
 
 Make glac threshold a variable

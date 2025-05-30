@@ -173,8 +173,7 @@ def extract_ctx_vars(time, pole, config):
             "%Y/%m/%d/CTXin%Y%m%d%H%M%S405SVMSG01MD.nc")
     # with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename),chunks="auto") as ctx_data:
     with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename)) as ctx_data:
-        return ctx_data['ctp'].values
-
+        return ctx_data['ctp'].values, ctx_data['ctt'].values
 
 def extract_aux_vars(aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr):
     ind1 = cloud_location_ind_non_agg[0]
@@ -182,20 +181,20 @@ def extract_aux_vars(aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_
     return pix_arr[aux_ind, ind1, ind2], lat_arr[aux_ind, ind1, ind2], lon_arr[aux_ind, ind1, ind2]
 
 
-def extract_additional_values(cot_arr, ctp_arr, cloud_location_ind_non_agg):
+def extract_additional_values(cot_arr, ctp_arr, ctt_arr, cloud_location_ind_non_agg):
     ind1 = cloud_location_ind_non_agg[0]
     ind2 = cloud_location_ind_non_agg[1]
-    return cot_arr[0, ind1, ind2], ctp_arr[0, ind1, ind2]
+    return cot_arr[0, ind1, ind2], ctp_arr[0, ind1, ind2], ctt_arr[0, ind1, ind2]
 
 
 def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
     columns = ["is_large_pix_cloud", "is_cot_valid_cloud", "is_ctp_valid_cloud", "is_liq", "is_mix", "is_ice", "max_water_frac",
                "max_ice_fraction", "avg_size[km]", "max_size[km]",
                "min_size[km]", "avg_size[px]", "max_size[px]",
-               "min_size[px]", "track_start_time", "track_length", "avg_cot", "avg_ctp",
+               "min_size[px]", "track_start_time", "track_length", "avg_cot", "avg_ctp", "avg_ctt",
                "glaciation_start_time", "glaciation_end_time", "avg_lat",
                "avg_lon", "start_ice_fraction", "end_ice_fraction",
-               "ice_frac_hist", "cot_hist", "cot_nan_frac_hist", "ctp_hist", "ctp_nan_frac_hist", "lat_hist", "lon_hist",
+               "ice_frac_hist", "cot_hist", "cot_std_hist",  "cot_nan_frac_hist", "ctp_hist", "ctp_std_hist", "ctp_nan_frac_hist", "ctt_hist", "ctt_std_hist" , "lat_hist", "lon_hist",
                "size_hist_km"]
     datapoints_per_cloud = len(columns)
     cloudinfo_df = pd.DataFrame(
@@ -222,6 +221,7 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
                 current_cloud.track_length,
                 current_cloud.avg_cot,
                 current_cloud.avg_ctp,
+                current_cloud.avg_ctt,
                 current_cloud.glaciation_start_time,
                 current_cloud.glaciation_end_time,
                 extract_value(current_cloud.avg_cloud_lat),
@@ -230,9 +230,13 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
                 current_cloud.end_ice_fraction_arr,
                 current_cloud.ice_fraction_list,
                 current_cloud.mean_cot_list,
+                current_cloud.std_cot_list,
                 current_cloud.cot_nan_frac_list,
                 current_cloud.mean_ctp_list,
+                current_cloud.std_ctp_list,
                 current_cloud.ctp_nan_frac_list,
+                current_cloud.mean_ctt_list,
+                current_cloud.std_ctt_list,
                 current_cloud.lat_list,
                 current_cloud.lon_list,
                 current_cloud.cloud_size_km_list
@@ -300,7 +304,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
 
         if collect_cot:
             cot_arr, cwp_arr = extract_cpp_vars(time, pole, config)
-            ctp_arr = extract_ctx_vars(time, pole, config)
+            ctp_arr, ctt_arr = extract_ctx_vars(time, pole, config)
 
         cloudtrack_fp = tracking_fps[pole][temp_key]['cloudtracks'][fp_ind]
 
@@ -359,20 +363,20 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                         cloud_pix_area_values, cloud_lat_values, cloud_lon_values = extract_aux_vars(
                             aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr)
                         if collect_cot:
-                            cloud_cot_values, cloud_ctp_values = extract_additional_values(
-                                cot_arr, ctp_arr, cloud_location_ind_non_agg)
+                            cloud_cot_values, cloud_ctp_values, cloud_ctt_values = extract_additional_values(
+                                cot_arr, ctp_arr, ctt_arr, cloud_location_ind_non_agg)
                         else:
-                            cloud_cot_values, cloud_ctp_values = np.array(
-                                [0]), np.array([0])
+                            cloud_cot_values, cloud_ctp_values, cloud_ctt_values = np.array(
+                                [0]), np.array([0]), np.array([0])
                         # print(np.info(cloud_cot_values))
                         cloud_arr[track_number-1].update_status(
-                            time, cloud_cph_values, cloud_cot_values, cloud_ctp_values, cloud_lat_values, cloud_lon_values, cloud_pix_area_values)
+                            time, cloud_cph_values, cloud_cot_values, cloud_ctp_values, cloud_ctt_values, cloud_lat_values, cloud_lon_values, cloud_pix_area_values)
 
                 else:
                     cloud_arr[track_number-1].update_missing_cloud()
 
-        del ctp_arr, cph_arr, cwp_arr, cot_arr
-        del cloud_cot_values, cloud_ctp_values, cloud_cph_values
+        del ctp_arr, cph_arr, cwp_arr, cot_arr, ctt_arr
+        del cloud_cot_values, cloud_ctp_values, cloud_cph_values, cloud_ctt_values
         del hash_map_cloud_numbers
         del cloud_location_ind, cloud_location_ind_non_agg
         del cloud_pix_area_values, cloud_lat_values, cloud_lon_values

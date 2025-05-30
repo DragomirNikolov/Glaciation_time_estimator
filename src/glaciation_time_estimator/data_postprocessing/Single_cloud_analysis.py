@@ -1,12 +1,7 @@
 import numpy as np
 import xarray as xr
 import datetime as dt
-
-
-import numpy as np
-import xarray as xr
-import datetime as dt
-
+import math
 
 class Cloud:
     # def __new__(self, *args, **kwargs):
@@ -55,6 +50,11 @@ class Cloud:
         self.mean_ctp_list = []
         self.std_ctp_list = []
 
+        self.sum_cloud_ctt = 0
+        self.avg_ctt = None
+        self.mean_ctt_list = []
+        self.std_ctt_list = []
+
         self.sum_cloud_cwp = 0
         self.avg_cwp = None
         self.cwp_timestep_counter = 0
@@ -89,7 +89,21 @@ class Cloud:
         return f"{self.is_liq},{self.is_mix},{self.is_ice},"
     # In resampled clouds pixel area should be the area in degrees lon_resolution*lat_resolution
 
-    def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, cloud_lat, cloud_lon, pixel_area):
+    def weighted_avg_and_std(values, weights):
+        """
+        Return the weighted average and standard deviation.
+
+        They weights are in effect first normalized so that they 
+        sum to 1 (and so they must not all be 0).
+
+        values, weights -- NumPy ndarrays with the same shape.
+        """
+        average = numpy.average(values, weights=weights)
+        # Fast and numerically precise:
+        variance = numpy.average((values-average)**2, weights=weights)
+        return (average, math.sqrt(variance))
+
+    def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area):
         ind_to_take = ~np.isnan(pixel_area)
         pixel_area = pixel_area[ind_to_take]
         if sum(pixel_area) == 0 or len(pixel_area)==0:
@@ -194,6 +208,8 @@ class Cloud:
 
             self.update_cot_variables(cot_values, pixel_area)
             self.update_ctp_variables(ctp_values, pixel_area)
+            self.update_ctt_variables(ctt_values, pixel_area)
+            
 
     def update_cot_variables(self, cot_values, pixel_area):
         cot_nan_frac = np.count_nonzero(
@@ -204,14 +220,16 @@ class Cloud:
         weights = pixel_area[~np.isnan(cot_values)]
         if len(weights) > 0:
             cot_values = cot_values[~np.isnan(cot_values)]
-            mean_cot = np.average(cot_values, weights=weights)
+            mean_cot, std_cot = weighted_avg_and_std(cot_values, weights)
             if cot_nan_frac < 0.1:
                 self.sum_cloud_cot += mean_cot
                 self.cot_timestep_counter += 1
                 self.avg_cot = self.sum_cloud_cot/self.cot_timestep_counter
         else:
             mean_cot = np.nan
+            std_cot = np.nan
         self.mean_cot_list.append(mean_cot)
+        self.std_cot_list.append(std_cot)
 
     def update_ctp_variables(self, ctp_values, pixel_area):
         ctp_nan_frac = np.count_nonzero(
@@ -222,14 +240,29 @@ class Cloud:
         weights = pixel_area[~np.isnan(ctp_values)]
         if len(weights) > 0:
             ctp_values = ctp_values[~np.isnan(ctp_values)]
-            mean_ctp = np.average(ctp_values, weights=weights)
+            mean_ctp, std_ctp = weighted_avg_and_std(ctp_values, weights)
             if ctp_nan_frac < 0.1:
                 self.sum_cloud_ctp += mean_ctp
                 self.ctp_timestep_counter += 1
                 self.avg_ctp = self.sum_cloud_ctp/self.ctp_timestep_counter
         else:
             mean_ctp = np.nan
+            std_ctp = np.nan
         self.mean_ctp_list.append(mean_ctp)
+        self.std_ctp_list.append(std_ctp)
+
+    def update_ctt_variables(self, ctt_values, pixel_area):
+        weights = pixel_area[~np.isnan(ctt_values)]
+        if len(weights) > 0:
+            ctt_values = ctt_values[~np.isnan(ctt_values)]
+            mean_ctt, std_ctt = weighted_avg_and_std(ctt_values, weights)
+            self.sum_cloud_ctt += mean_ctt
+            self.avg_ctt = self.sum_cloud_ctt/self.n_timesteps
+        else:
+            mean_ctt = np.nan
+            std_ctt = np.nan
+        self.mean_ctt_list.append(mean_ctt)
+        self.std_ctt_list.append(std_ctt)
 
     def update_missing_cloud(self):
         if self.track_end_time and (not self.terminate_cloud):
