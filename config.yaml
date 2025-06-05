@@ -3,11 +3,27 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20070515_1500"
-end_time: "20070601_0000"
+start_time: "20090515_1500"
+end_time: "20090601_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
+#Is this file used to set up an analysis of a whole year of data
+Analyze_year: True
+# In how many parts are the months in this year split
+n_month_parts: 2
+# The folder which contains the following structure:
+# {year}_tracking
+#      01_01.yaml
+#      01_02.yaml
+#      ...
+#      01_<n_month_parts>.yaml
+#      02_01.yaml
+#      ...
+#      02_<n_month_parts>.yaml
+#      ...
+#      12_<n_month_parts>.yaml
+yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs"
 
 ########################
 # Data structure and location
@@ -82,7 +98,7 @@ fast_mode_arr_size: 20000
 postprocessing_output_dir: eu:/cluster/work/climate/dnikolo/Cloud_analysis/
 #Format of the postprocessing_output_dir subfolder name in which the outputs from a given run are stored
 time_folder_format: "%Y%m%d.%H%M"
-
+n_postproc_cores: 4
 # Should the program output a CSV file with cloud and glaciation properties on top of the standard parquet binary 
 # Turn on for readability
 write_csv: True
@@ -93,4 +109,8 @@ collect_additional_properties: True
 
 # The standard RMSE used to determine wether a glaciation is linear. Read more in the documentation.
 Global_sqrt_mse: 0.05628526744657018
+# Glaciation threshold
+glac_threshold: 0.4
+
+
 

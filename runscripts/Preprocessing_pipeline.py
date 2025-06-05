@@ -292,6 +292,7 @@ def preprocessing_pipeline(config):
 
 
 if __name__ == "__main__":
+    # Read the given GTE config file - its file path should be specified as a command line argument -cf <path_to_config>
     config = read_config()
     print(
         f"Start time: {config['start_time']}\nEnd time: {config['end_time']}\nAggreagation factor: {config['agg_fact']}")

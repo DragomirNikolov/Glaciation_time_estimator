@@ -48,11 +48,16 @@ def check_keys(config):
         'Global_sqrt_mse',
         'n_preproc_cores',
         'n_preproc_threads',
-        'grid_fps'
-
+        'grid_fps',
+        'glac_threshold',
+        'n_postproc_cores'
     ]
     config_keys_set = set(config.keys())
-    expected_keys_set = set(keys_to_check)
+    if config.get('Analyze_year',False):
+        keys_to_check.extend(['Analyze_year','n_month_parts','yearly_config_folder'])
+    expected_keys_set = set(keys_to_check) 
+    if not config.get('Analyze_year',False):
+        config_keys_set -= {'Analyze_year','n_month_parts','yearly_config_folder'}
     assert config_keys_set == expected_keys_set, f"The keys: {config_keys_set.symmetric_difference(expected_keys_set)} are missing in the configuration file"
 
 
@@ -79,6 +84,7 @@ def format_config(config):
 def read_config(config_fp=None):
     if config_fp is None:
         config_fp = parse_cmd_args()
+        print(f"Reading config at {config_fp}")
     with open(config_fp) as stream:
         try:
             config = yaml.safe_load(stream)

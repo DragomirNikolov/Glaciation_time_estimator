@@ -1,5 +1,6 @@
 #!/bin/bash
-# YEARS=("$@")
+# Most important file in the codebase.
+# This script is used to run the preprocessing, tracking, post-processing and glaciation_detection jobs for a given year.
 
 while getopts 'd:y:w:' flag; do
     case "${flag}" in

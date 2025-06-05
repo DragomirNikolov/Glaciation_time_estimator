@@ -240,7 +240,7 @@ def extract_glaciations_whole_year(config):
     warnings.filterwarnings('ignore')
     # combined_cloud_df = get_combined_cloud_df(config)
     year=config['start_time'].year
-    glac_tresh=0.4
+    glac_tresh=config.get("glac_threshold",0.4)
     combined_cloud_df = pd.read_parquet(os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_all.parquet"))
     print(combined_cloud_df)
     result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=glac_tresh)

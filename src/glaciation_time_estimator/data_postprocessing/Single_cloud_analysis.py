@@ -4,21 +4,24 @@ import datetime as dt
 import math
 
 class Cloud:
+    """
+    A class containing all the information of a given tracked feature (cloud)
+    """
     # def __new__(self, *args, **kwargs):
     #     return super().__new__(self)
     def __init__(self, cloud_id, is_resampled):
-        self.id = cloud_id
-        self.is_resampled = is_resampled
-        self.crit_fraction = 0.1
+        self.id = cloud_id # tracknumber
+        self.is_resampled = is_resampled # whether we are analyzing output directly from CLAAS or after resampling
+        self.crit_fraction = 0.1 # For simplified analysis. Critical IF below which the cloud is considered liquid. Above 1-crit_fraction the cloud is considered ice. In the medium range the cloud is considered mixed.
         # Bools inidicating if the cloud has been liquid at any point
-        self.is_liq: bool = False
-        self.is_mix: bool = False
-        self.is_ice: bool = False
+        self.is_liq: bool = False # Has the cloud been liquid at any point?
+        self.is_mix: bool = False # Has the cloud been mixed at any point?
+        self.is_ice: bool = False # Has the cloud been ice at any point?
         # Max and min cloud size in pixels
-        self.max_size_km: float = 0.0
-        self.max_size_px: int = 0
-        self.min_size_km: float = 510.0e6
-        self.min_size_px: int = 3717*3717
+        self.max_size_km: float = 0.0 # Maximum area of the cloud in km
+        self.max_size_px: int = 0 # Maximum area of the cloud in num. of pixels
+        self.min_size_km: float = 510.0e6 # Minimum area of the cloud in km. Start with really large value and minimize from there 
+        self.min_size_px: int = 3717*3717 # Minimum area of the cloud in num. of pixels. 
 
         # Variables giving the first and last 4 timesteps (1 hour) of the cloud ice fraction - both arrays run in the same time direction start: [1 , 2 , 3 , 4] ... end: [1 , 2 , 3 , 4]
         self.start_ice_fraction_arr = np.empty(4)
@@ -89,7 +92,7 @@ class Cloud:
         return f"{self.is_liq},{self.is_mix},{self.is_ice},"
     # In resampled clouds pixel area should be the area in degrees lon_resolution*lat_resolution
 
-    def weighted_avg_and_std(values, weights):
+    def weighted_avg_and_std(self, values, weights):
         """
         Return the weighted average and standard deviation.
 
@@ -98,9 +101,9 @@ class Cloud:
 
         values, weights -- NumPy ndarrays with the same shape.
         """
-        average = numpy.average(values, weights=weights)
+        average = np.average(values, weights=weights)
         # Fast and numerically precise:
-        variance = numpy.average((values-average)**2, weights=weights)
+        variance = np.average((values-average)**2, weights=weights)
         return (average, math.sqrt(variance))
 
     def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area):
@@ -125,6 +128,7 @@ class Cloud:
             raise ValueError(error_message)
         cot_values = cot_values[ind_to_take]
         ctp_values = ctp_values[ind_to_take]
+        ctt_values = ctt_values[ind_to_take]
         cloud_lat = cloud_lat[ind_to_take]
         cloud_lon = cloud_lon[ind_to_take]
         cloud_size_px = cloud_values.shape[0]
@@ -220,7 +224,7 @@ class Cloud:
         weights = pixel_area[~np.isnan(cot_values)]
         if len(weights) > 0:
             cot_values = cot_values[~np.isnan(cot_values)]
-            mean_cot, std_cot = weighted_avg_and_std(cot_values, weights)
+            mean_cot, std_cot = self.weighted_avg_and_std(cot_values, weights)
             if cot_nan_frac < 0.1:
                 self.sum_cloud_cot += mean_cot
                 self.cot_timestep_counter += 1
@@ -240,7 +244,7 @@ class Cloud:
         weights = pixel_area[~np.isnan(ctp_values)]
         if len(weights) > 0:
             ctp_values = ctp_values[~np.isnan(ctp_values)]
-            mean_ctp, std_ctp = weighted_avg_and_std(ctp_values, weights)
+            mean_ctp, std_ctp = self.weighted_avg_and_std(ctp_values, weights)
             if ctp_nan_frac < 0.1:
                 self.sum_cloud_ctp += mean_ctp
                 self.ctp_timestep_counter += 1
@@ -255,7 +259,7 @@ class Cloud:
         weights = pixel_area[~np.isnan(ctt_values)]
         if len(weights) > 0:
             ctt_values = ctt_values[~np.isnan(ctt_values)]
-            mean_ctt, std_ctt = weighted_avg_and_std(ctt_values, weights)
+            mean_ctt, std_ctt = self.weighted_avg_and_std(ctt_values, weights)
             self.sum_cloud_ctt += mean_ctt
             self.avg_ctt = self.sum_cloud_ctt/self.n_timesteps
         else:

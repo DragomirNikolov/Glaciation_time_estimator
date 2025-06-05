@@ -117,9 +117,10 @@ def combine_whole_year(config):
     analysis_df_list = []
     months=[month for month in range(1,13)]
     for month in months:
-        for part in [1,2]:
+        for part in range(1,config.get('n_month_parts',2)+1):
             print(f"Analysing {year}_tracking/{month:02}_{part:02}.yaml")
-            config_fp = f'/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/{year}_tracking/{month:02}_{part:02}.yaml'
+            if config.get('Analyze_year',False):
+                config_fp = os.path.join(config["yearly_config_folder"],f'{year}_tracking',f'{month:02}_{part:02}.yaml')
             temp_config = read_config(config_fp)
             df = get_combined_cloud_df(temp_config)
             if df is not None:

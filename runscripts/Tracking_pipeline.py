@@ -7,8 +7,12 @@ from glaciation_time_estimator.auxiliary_func.config_reader import read_config
 
 if __name__ == "__main__":
     # Read the configuration file
+    # Read the given GTE config file - its file path should be specified as a command line argument -cf <path_to_gte_config>
     gte_config = read_config()
+    # Copy the filtered CLAAS_3 files to TMP_DIR
     copy_filtered_files(gte_config)
+    # Generate a pyflextrkr config file for the given period
+    # The file is based on the file given under the command line argument -bc <path_to_pylextrkr_config>
     pyflextrkr_config_dir = generate_pyflextrkr_config(gte_config)
     run_generic_tracking(pyflextrkr_config_dir)
     send_results(gte_config)

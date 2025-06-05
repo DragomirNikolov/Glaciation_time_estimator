@@ -384,9 +384,10 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
     save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config)
 
 
-def analize_single_pole(pole, cloud_dict, tracking_fps, config, n_procs=6):
+def analize_single_pole(pole, cloud_dict, tracking_fps, config):
     print(f"Analyzing {pole}")
     aux_ds = xr.load_dataset(config["aux_fps_eu"][pole], decode_times=False)
+    n_procs = config.get("n_postproc_cores",4)
     if config["Resample"]:
         with Pool(n_procs) as pool:
             part_single_temp_range = partial(
@@ -401,6 +402,7 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config, n_procs=6):
         pix_area = aux_ds["pixel_area"].load()
         part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
                                          pole=pole, config=config, pix_area=pix_area, lon=lon_mat, lat=lat_mat)
+       
         with Pool(n_procs) as pool:
             pool.map(part_single_temp_range, range(
                 len(config['min_temp_arr'])))
@@ -506,3 +508,4 @@ def analyze_tracked_clouds(config):
 if __name__ == "__main__":
     config=read_config()
     analyze_tracked_clouds(config)
+
