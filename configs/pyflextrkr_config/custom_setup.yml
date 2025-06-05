@@ -30,7 +30,7 @@ enddate:   '20040201.2000'
 run_parallel: 0
 nprocesses: 16  # Number of processors to use if run_parallel=1
 
-databasename: 'Agg_03_T_5_0_'
+databasename: 'Agg_03_T_6_0_'
 # Specify date/time string format in the file name
 # E.g., radar_20181101.011503.nc --> yyyymodd.hhmmss
 # E.g., wrfout_2018-11-01_01:15:00 --> yyyy-mo-dd_hh:mm:ss
