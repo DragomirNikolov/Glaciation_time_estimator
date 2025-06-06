@@ -25,6 +25,11 @@ class ChunkLoader:
         # initial load using full columns
         self.load_single_chunk(years[0])
 
+    def __str__(self):
+        return f"Dataset chunk loader\n \
+                Analyzing files: {self.cloud_fps}\n\
+                Currently loaded: {self.loaded_key}"
+    
     def load_single_chunk(
         self,
         key,

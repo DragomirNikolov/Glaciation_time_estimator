@@ -32,3 +32,7 @@ def get_env_variable(name, fail=False, replace_dir="/cluster/work/climate/dnikol
         else:
             var = replace_dir
     return var
+
+def float_range(start,stop,step):
+    factor = 1/step
+    return np.arange(start*factor,stop*factor,1)/factor

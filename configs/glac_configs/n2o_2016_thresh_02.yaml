@@ -1,0 +1,36 @@
+start_time: '20160515_1500'
+end_time: '20160601_0000'
+t_deltas:
+- 6
+Analyze_year: false
+n_month_parts: 2
+yearly_config_folder: /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs
+pole_split: true
+pole_folders:
+- np
+- sp
+struct_boundary_date: '20210101_0000'
+aux_fps:
+  np: /nfs/n2o/wolke_scratch/dnikolo/CLAAS_Data/np/CM_SAF_CLAAS3_L2_AUX.nc
+  sp: /nfs/n2o/wolke_scratch/dnikolo/CLAAS_Data/sp/CM_SAF_CLAAS3_L2_AUX.nc
+aux_fps_eu:
+  np: /cluster/work/climate/dnikolo/Auxiliary_files/CM_SAF_CLAAS3_L2_AUX_NP.nc
+  sp: /cluster/work/climate/dnikolo/Auxiliary_files/CM_SAF_CLAAS3_L2_AUX_SP.nc
+grid_fps:
+  np: /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Data_preprocessing/grid_np.txt
+  sp: /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Data_preprocessing/grid_sp.txt
+CLAAS_fp: /nfs/n2o/wolke_scratch/dnikolo/CLAAS_Data/
+job_output_fp: eu:/cluster/work/climate/dnikolo/Job_output/
+Resample: false
+agg_fact: 3
+n_preproc_cores: 2
+n_preproc_threads: 8
+postprocessing_fast_mode: false
+fast_mode_arr_size: 20000
+postprocessing_output_dir: /wolke_scratch/dnikolo/
+time_folder_format: '%Y%m%d.%H%M'
+n_postproc_cores: 4
+write_csv: true
+collect_additional_properties: true
+Global_sqrt_mse: 0.05628526744657018
+glac_threshold: 0.2
