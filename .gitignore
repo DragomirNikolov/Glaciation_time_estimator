@@ -163,3 +163,4 @@ cython_debug/
 
 *.nc
 *.log
+*.eps

@@ -54,14 +54,15 @@ class ChunkLoader:
                     ).dt.month
             else:
                 columns_to_load = set(cloud_columns)
-                columns_to_load -= columns_to_load.intersection({'Cloud_ID', 'month'})
+                columns_to_load -= columns_to_load.intersection({'Cloud_ID', 'month', 'is_large_pix_cloud','avg_lat','avg_lon'})
                 self.cloud_chunk = pd.read_parquet(
-                    self.cloud_fps[key], columns=list(columns_to_load).extend(["Cloud_ID"])
-                )
+                    self.cloud_fps[key], columns=list(columns_to_load).extend(['Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon']))
                 if 'month' in cloud_columns:
                     self.cloud_chunk["month"] = pd.to_datetime(
                         self.cloud_chunk['track_start_time']
                     ).dt.month
+            self.cloud_chunk=self.cloud_chunk[~self.cloud_chunk.is_large_pix_cloud]
+            self.cloud_chunk = self.cloud_chunk[(self.cloud_chunk.avg_lat >30) | (self.cloud_chunk.avg_lat<-30)]
         else:
             self.cloud_chunk = pd.DataFrame()
 
@@ -73,10 +74,12 @@ class ChunkLoader:
                 )
             else:
                 columns_to_load = set(glac_columns)
-                columns_to_load -= columns_to_load.intersection({'Cloud_ID'})
+                columns_to_load -= columns_to_load.intersection({'Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon'})
                 self.glac_chunk = pd.read_parquet(
-                    self.glac_fps[key], columns=list(columns_to_load).extend(["Cloud_ID"])
+                    self.glac_fps[key], columns=list(columns_to_load).extend(['Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon'])
                 )
+            self.glac_chunk=self.glac_chunk[~self.glac_chunk.is_large_pix_cloud]
+            self.glac_chunk = self.glac_chunk[(self.glac_chunk.avg_lat >30) | (self.glac_chunk.avg_lat<-30)]
             # Drop duplicate Cloud_IDs and mark glaciating
             self.glac_cloud_chunk = self.glac_chunk.drop_duplicates(
                 subset="Cloud_ID", keep="first"
