@@ -34,7 +34,7 @@ def check_keys(config):
         "struct_boundary_date",
         "pole_folders",
         "aux_fps",
-        "aux_fps_eu",
+        "aux_fps_agg",
         "CLAAS_fp",
         "job_output_fp",
         "agg_fact",
@@ -58,7 +58,7 @@ def check_keys(config):
     expected_keys_set = set(keys_to_check) 
     if not config.get('Analyze_year',False):
         config_keys_set -= {'Analyze_year','n_month_parts','yearly_config_folder'}
-    assert config_keys_set == expected_keys_set, f"The keys: {config_keys_set.symmetric_difference(expected_keys_set)} are missing in the configuration file"
+    assert config_keys_set == expected_keys_set, f"The keys: {config_keys_set.symmetric_difference(expected_keys_set)} are missing or redundant in the configuration file"
 
 
 def format_config(config):

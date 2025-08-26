@@ -245,7 +245,9 @@ def extract_glaciations_whole_year(config):
     print(combined_cloud_df)
     result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=glac_tresh)
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
-    glaciations_df.to_parquet(os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_glac_{int(glac_tresh*10):02}.parquet"))
+    glac_df_path = os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_glac_{int(glac_tresh*10):02}.parquet")
+    print(f"Writing glaciations to parquet: {glac_df_path}")
+    glaciations_df.to_parquet(glac_df_path)
     # save_glac_df(glaciations_df, config)
 
 

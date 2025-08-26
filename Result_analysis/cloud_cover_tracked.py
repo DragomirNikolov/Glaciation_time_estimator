@@ -88,7 +88,7 @@ def run_cdo(cmd, verbose=False):
 
 def process_one_day(task, silent=True, verbose=False, overwrite=False):
     group, agg_name, range_name, day, day_files, output_root = task
-    out_dir = os.path.join(output_root, group, agg_name, range_name)
+    out_dir = os.path.join(output_root, group, agg_name)
     os.makedirs(out_dir, exist_ok=True)
     out_file = os.path.join(out_dir, f'{day}_timmean.nc')
 
@@ -103,8 +103,8 @@ def process_one_day(task, silent=True, verbose=False, overwrite=False):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--base', default='/wolke_scratch/dnikolo/Euler_backup', help='Base input root')
-    ap.add_argument('--output', default='/wolke_scratch/dnikolo/processed_daily', help='Output root')
+    ap.add_argument('--base', default='/nfs/n2o/wolke_scratch/dnikolo/Euler_backup', help='Base input root')
+    ap.add_argument('--output', default='/nfs/n2o/wolke_scratch/dnikolo/processed_daily', help='Output root')
     ap.add_argument('--year', default='2010', help='Year prefix to process (e.g., 2010)')
     ap.add_argument('--workers', type=int, default=4, help='Parallel CDO jobs')
     ap.add_argument('--verbose', action='store_true', help='Print CDO commands')
