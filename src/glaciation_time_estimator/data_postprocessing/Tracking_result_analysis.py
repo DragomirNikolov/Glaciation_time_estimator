@@ -263,7 +263,7 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
 
 
 # @profile
-def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area=None,  lon=None, lat=None) -> None:
+def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area=None, pix_area_agg = None,  lon=None, lat=None) -> None:
     # Load configuration parameters
     min_temp, max_temp = config['min_temp_arr'][temp_ind], config['max_temp_arr'][temp_ind]
     abs_min_temp, abs_max_temp = abs(round(min_temp)), abs(round(max_temp))
@@ -295,6 +295,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
     # print(f"Analyzing T: {min_temp} to {max_temp} Agg={config['agg_fact']}")
 
     pix_arr = pix_area.values if pix_area is not None else None
+    pix_arr_agg = pix_area_agg.values if pix_area_agg is not None else None
 
     for fp_ind in range(len(basetimes)):
         time = basetimes[fp_ind]
@@ -328,8 +329,8 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
             del cloudtracknumber_field
 
         # print(f"N_clouds in frame {len(cloud_id_in_field)}", flush=True)
-        if max_allowed_cloud_size_px > 1000000:
-            print(np.where(counts, counts == counts.max()))
+        # if max_allowed_cloud_size_px > 1000000:
+        #     print(np.where(counts, counts == counts.max()))
         # print(cloud_id_in_field)
 
         for track_number in cloud_id_in_field:
@@ -350,6 +351,9 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                 if cloud_location_ind[0].size != 0:
                     cloud_cph_values = cph_arr[0,
                                                cloud_location_ind[0].T, cloud_location_ind[1].T]
+                    # print(f"Cloud cph values size: {cloud_cph_values.shape}")
+                    # print(f"Cloud loc ind 0 size: {cloud_location_ind[0].shape}")
+                    # print(f"Cloud loc ind 1 size: {cloud_location_ind[1].shape}")
                     if is_resampled:
                         avg_lat_ind = int(
                             round(np.mean(cloud_location_ind[0])))
@@ -363,6 +367,10 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                             cloud_location_ind[0], cloud_location_ind[1])
                         cloud_pix_area_values, cloud_lat_values, cloud_lon_values = extract_aux_vars(
                             aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr)
+                        agg_pix_area_values = pix_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
+                        # print(f"Cloud location ind non agg 0: {cloud_location_ind_non_agg[0].shape}")
+                        # print(f"Cloud pix area values: {cloud_pix_area_values[::9].shape}")
+                        # assert (cloud_pix_area_values[::9].shape == cloud_cph_values.shape), f"Pixel area size array mismatch\npix_area:{cloud_pix_area_values[::9].shape}\n{cloud_cph_values.shape}\ncloud_location_ind 0: {cloud_location_ind[0]}\ncloud_location_ind 1: {cloud_location_ind[1]}\ncloud_location_ind_non_agg 0: {cloud_location_ind_non_agg[0][:-20]}\ncloud_location_ind_non_agg 1: {cloud_location_ind_non_agg[1][:-20]}"
                         if collect_cot:
                             cloud_cot_values, cloud_ctp_values, cloud_ctt_values = extract_additional_values(
                                 cot_arr, ctp_arr, ctt_arr, cloud_location_ind_non_agg)
@@ -370,23 +378,26 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                             cloud_cot_values, cloud_ctp_values, cloud_ctt_values = np.array(
                                 [0]), np.array([0]), np.array([0])
                         # print(np.info(cloud_cot_values))
+                        # assert (cloud_pix_area_values.size >= ((cloud_cph_values.size-1) * (config['agg_fact'] ** 2))),  "Pixel area size array mismatch"
                         cloud_arr[track_number-1].update_status(
-                            time, cloud_cph_values, cloud_cot_values, cloud_ctp_values, cloud_ctt_values, cloud_lat_values, cloud_lon_values, cloud_pix_area_values)
+                            time, cloud_cph_values, cloud_cot_values, cloud_ctp_values, cloud_ctt_values, cloud_lat_values, cloud_lon_values, cloud_pix_area_values, agg_pix_area_values)
 
                 else:
                     cloud_arr[track_number-1].update_missing_cloud()
-
         del ctp_arr, cph_arr, cwp_arr, cot_arr, ctt_arr
         del cloud_cot_values, cloud_ctp_values, cloud_cph_values, cloud_ctt_values
         del hash_map_cloud_numbers
         del cloud_location_ind, cloud_location_ind_non_agg
         del cloud_pix_area_values, cloud_lat_values, cloud_lon_values
+
+    return 
     save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config)
 
 
 def analize_single_pole(pole, cloud_dict, tracking_fps, config):
     print(f"Analyzing {pole}")
-    aux_ds = xr.load_dataset(config["aux_fps_eu"][pole], decode_times=False)
+    aux_ds = xr.load_dataset(config["aux_fps"][pole], decode_times=False)
+    aux_ds_agg = xr.load_dataset(config["aux_fps_agg"][pole], decode_times=False)
     n_procs = config.get("n_postproc_cores",4)
     if config["Resample"]:
         with Pool(n_procs) as pool:
@@ -400,8 +411,9 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config):
         lat_mat = aux_ds["lat"].load()
         lon_mat = aux_ds["lon"].load()
         pix_area = aux_ds["pixel_area"].load()
+        pix_area_agg = aux_ds_agg["pixel_area"].load()
         part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
-                                         pole=pole, config=config, pix_area=pix_area, lon=lon_mat, lat=lat_mat)
+                                         pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat, lat=lat_mat)
        
         with Pool(n_procs) as pool:
             pool.map(part_single_temp_range, range(

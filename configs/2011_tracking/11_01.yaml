@@ -38,15 +38,14 @@ struct_boundary_date: "20210101_0000"
 # Auxiliary files filepaths dictionary. There should be a member for each pole folder
 aux_fps:
   {
-    "np": "/nfs/ch4/wolke_scratch/dnikolo/CLAAS_Data/np/CM_SAF_CLAAS3_L2_AUX.nc",
-    "sp": "/nfs/ch4/wolke_scratch/dnikolo/CLAAS_Data/sp/CM_SAF_CLAAS3_L2_AUX.nc",
-  }
-
-# Auxiliary files filepaths dictionary on the second server. There should be a member for each pole folder
-aux_fps_eu:
-  {
     "np": "/cluster/work/climate/dnikolo/Auxiliary_files/CM_SAF_CLAAS3_L2_AUX_NP.nc",
     "sp": "/cluster/work/climate/dnikolo/Auxiliary_files/CM_SAF_CLAAS3_L2_AUX_SP.nc",
+  }  
+
+aux_fps_agg:
+  {
+    "np": "/nfs/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
+    "sp": "/nfs/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
   }  
 
 #Location of the files used for the temporary grid when resampling is turned off
@@ -65,7 +64,7 @@ grid_fps:
 # The analized time period shuld be available in both hemispheres for the program to work
 CLAAS_fp: "/nfs/ch4/wolke_scratch/dnikolo/CLAAS_Data/"
 # Folder where the netcdf cloud tracking location files are stored
-job_output_fp: "eu:/cluster/work/climate/dnikolo/Job_output/"
+job_output_fp: "/nfs/ch4/wolke_scratch/dnikolo/Euler_backup/"
 
 ###############
 # Preprocessing settings

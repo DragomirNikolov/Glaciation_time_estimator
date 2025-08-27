@@ -106,7 +106,7 @@ class Cloud:
         variance = np.average((values-average)**2, weights=weights)
         return (average, math.sqrt(variance))
 
-    def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area):
+    def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area, agg_pixel_area):
         ind_to_take = ~np.isnan(pixel_area)
         pixel_area = pixel_area[ind_to_take]
         if sum(pixel_area) == 0 or len(pixel_area)==0:
@@ -140,10 +140,10 @@ class Cloud:
         # print(cloud_values)
         if cloud_size_px:
             self.n_timesteps_no_cloud = 0
-            valid_values = cloud_values[cloud_values >= 1]
+            valid_values = cloud_values[cloud_values >= 1] - 1
+            agg_area_weights = agg_pixel_area[cloud_values >= 1]
             # print(len(valid_values)/len(cloud_values))
-            ice_fraction = (valid_values.sum() -
-                            float(len(valid_values)))/float(len(valid_values))
+            ice_fraction = np.average(valid_values, weights=agg_area_weights)
             # print(valid_values)
             # ice_fraction=float(np.count_nonzero(cloud_values==2))/float(cloud_size_px)
             water_fraction = 1-ice_fraction

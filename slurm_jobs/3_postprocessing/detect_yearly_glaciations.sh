@@ -9,7 +9,7 @@ while getopts 'd:y:' flag; do
     esac
 done
 if [ -z "$YEAR" ]; then
-    echo "Error: Please select years. Exiting."
+    echo "Error: Please select year. Exiting."
     exit 1
 fi
 postproc_job_ids=()
