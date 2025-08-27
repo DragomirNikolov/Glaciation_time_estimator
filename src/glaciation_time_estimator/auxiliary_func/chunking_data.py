@@ -9,14 +9,16 @@ class ChunkLoader:
         self.years = years
         if config is None:
             self.config = read_config(config_fp)
+            print(f"Loaded config from {config_fp}")
         else:
             self.config = config
-        self.glac_thresh=config["glac_threshold"]
+        self.glac_thresh=self.config["glac_threshold"]
         base = self.config["postprocessing_output_dir"]
         self.cloud_fps = {
             year: os.path.join(base, "Final_results", f"{year}_all.parquet")
             for year in years
         }
+        print(f"Cloud_fps: {self.cloud_fps}")
         self.glac_fps = {
             year: os.path.join(base, "Final_results", f"{year}_glac_{int(self.glac_thresh*10):02}.parquet")
             for year in years
