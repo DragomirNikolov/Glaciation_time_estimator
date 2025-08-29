@@ -7,8 +7,6 @@ if [ -z "$CONFIG_FILE" ]; then
 fi
 CONFIG_NAME="$(basename "$CONFIG_FILE")"   # strip everything but the last path element
 
-
-
-sbatch -J "${CONFIG_NAME}_peproc" \
+sbatch -J "${CONFIG_NAME}_preproc" \
       "${GTE_DIR}/slurm_jobs/1_preprocessing/preproc_job.bsub" \
       -c "$CONFIG_FILE"

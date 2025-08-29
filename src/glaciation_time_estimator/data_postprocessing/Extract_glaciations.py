@@ -27,6 +27,7 @@ class Peak:
         return float("inf") if self.died is None else seq[self.born] - seq[self.died]
 
 # Get the peaks in an IF history
+# With slight modifications from https://www.sthu.org/blog/13-perstopology-peakdetection/index.html
 def get_persistent_homology(seq):
     peaks = []
     # Maps indices to peaks
@@ -249,6 +250,7 @@ def extract_glaciations_whole_year(config):
     print(f"Writing glaciations to parquet: {glac_df_path}")
     glaciations_df.to_parquet(glac_df_path)
     # save_glac_df(glaciations_df, config)
+
 
 
 if __name__ == "__main__":

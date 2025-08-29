@@ -11,7 +11,7 @@ t_deltas: [6]
 #Is this file used to set up an analysis of a whole year of data
 Analyze_year: True
 # In how many parts are the months in this year split
-n_month_parts: 2
+n_month_parts: 3
 # The folder which contains the following structure:
 # {year}_tracking
 #      01_01.yaml
@@ -51,8 +51,8 @@ aux_fps_agg:
 #Location of the files used for the temporary grid when resampling is turned off
 grid_fps:
   {
-    "np": "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Data_preprocessing/grid_np.txt",
-    "sp": "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Data_preprocessing/grid_sp.txt"
+    "np": "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/grids/grid_np.txt",
+    "sp": "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/grids/grid_sp.txt"
   }
 
 # File path of the CLAAS dataset that contains the pole(hemisphere) folders

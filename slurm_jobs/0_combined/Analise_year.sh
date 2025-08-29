@@ -2,7 +2,11 @@
 # Most important file in the codebase.
 # This script is used to run the preprocessing, tracking, post-processing and glaciation_detection jobs for a given year.
 
-while getopts 'd:y:w:' flag; do
+print_usage() {
+  echo "Usage: $0 -y YEAR [-w WAIT_MIN] [-d GTE_DIR]" >&2
+}
+
+while getopts 'y:w:' flag; do
     case "${flag}" in
     y) YEAR=${OPTARG};;
     w) wait_time=${OPTARG};;
@@ -20,6 +24,7 @@ fi
 
 postproc_job_ids=()
 
+#Iterate over all months and all (in my case 2) parts of each month
 for MONTH in {01..12}; do
     for part in 01 02; do
         # Set name of configuration file

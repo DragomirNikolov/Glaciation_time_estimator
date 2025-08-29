@@ -389,8 +389,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
         del hash_map_cloud_numbers
         del cloud_location_ind, cloud_location_ind_non_agg
         del cloud_pix_area_values, cloud_lat_values, cloud_lon_values
-
-    return 
+ 
     save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config)
 
 

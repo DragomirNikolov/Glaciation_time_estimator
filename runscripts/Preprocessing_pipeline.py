@@ -50,6 +50,7 @@ def dispatch(sem, argv, **kw):
     finally:
         sem.release()
 
+
 def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample_res_fps, grid_fp, n_threads=8):
     formatting_start_time = time.time()
     sem = threading.Semaphore(n_threads)   # pick a threshold here
@@ -79,6 +80,7 @@ def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample
     formatting_end_time = time.time()
     print(
         f"Formated day {folder_fp_ind} in {round(formatting_end_time - formatting_start_time,2)}s starting with fp: {folder_fps_CTX[folder_fp_ind][0]}")
+
 
 # Used if Resample: True in the config file
 def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fps_CPP, folder_resample_res_fps, folder_agg_res_fps, transformer):
@@ -124,8 +126,7 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
         f"Resampled day {folder_fp_ind} in {round(resample_end_time-day_start_time,2)}s starting with fp: {folder_fps_CTX[folder_fp_ind][0]}")
 
 
-
-#Aggregation using cdo
+# Aggregation using cdo
 def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, agg_fact, n_threads=8):
     agg_start_time = time.time()
     sem = threading.Semaphore(n_threads)   # pick a threshold here
