@@ -5,6 +5,9 @@ from datetime import timedelta
 from glaciation_time_estimator.data_postprocessing.Job_result_fp_generator import generate_tracking_filenames
 from glaciation_time_estimator.auxiliary_func.config_reader import read_config
 
+BOOL_COLS_AND = {"is_large_pix_cloud", "is_cot_valid_cloud", "is_ctp_valid_cloud"}
+BOOL_COLS_OR  = {"is_liq", "is_mix", "is_ice"}
+
 def Extract_array_from_df(series: pd.Series):
     if series.empty:
         return None
@@ -112,9 +115,6 @@ def clasify_clouds(yearly_data):
     # Apply mapping
     yearly_data["Cloud type"] = yearly_data["Cloud type"].map(cloud_type_mapping)
 
-import numpy as np
-import pandas as pd
-
 # --- helpers --------------------------------------------------------------
 
 def _to_seconds(td):
@@ -133,13 +133,15 @@ def _wavg(a, b, w1, w2):
     return np.nan if w == 0 else np.dot(vals[m], wts[m]) / w
 
 def _concat_hist(x, y):
-    def to_list(v):
+    def to_array(v):
         if v is None or (isinstance(v, float) and np.isnan(v)):
-            return []
+            return np.array([])
         if isinstance(v, np.ndarray):
-            return v.tolist()
-        return list(v)
-    return to_list(x) + to_list(y)
+            return v
+        if isinstance(v, list):
+            return np.array(v)
+        return np.array(v)
+    return np.concatenate([to_array(x), to_array(y)])
 
 # --- your boundary extraction (fixed axis) --------------------------------
 
@@ -180,10 +182,6 @@ def merge_boundary_tracks(
         "ctt_hist","ctt_std_hist",
         "lat_hist","lon_hist","size_hist_km"
     }
-
-    # boolean logic groups
-    bool_and_cols = {"is_large_pix_cloud","is_cot_valid_cloud","is_ctp_valid_cloud"}
-    bool_or_cols  = {"is_liq","is_mix","is_ice"}
 
     # pattern-based groups
     def is_avg(col): return col.startswith("avg_")
@@ -246,10 +244,10 @@ def merge_boundary_tracks(
             merged["end_ice_fraction"] = r2.get("end_ice_fraction", np.nan)
 
         # apply boolean rules
-        for c in bool_and_cols:
+        for c in BOOL_COLS_AND:
             if c in p1b.columns or c in p2b.columns:
                 merged[c] = bool(r1.get(c, False)) and bool(r2.get(c, False))
-        for c in bool_or_cols:
+        for c in BOOL_COLS_OR:
             if c in p1b.columns or c in p2b.columns:
                 merged[c] = bool(r1.get(c, False)) or bool(r2.get(c, False))
 
@@ -268,7 +266,7 @@ def merge_boundary_tracks(
                 continue
             if c in hist_cols:
                 continue
-            if c in bool_and_cols or c in bool_or_cols:
+            if c in BOOL_COLS_AND or c in BOOL_COLS_OR:
                 continue
             v1 = r1.get(c, np.nan)
             v2 = r2.get(c, np.nan)
@@ -360,8 +358,29 @@ def apply_merged_rows(df1: pd.DataFrame, df2: pd.DataFrame, merged_boundary: pd.
 # df1_new, df2_new = apply_merged_rows(df1, df2, merged_boundary)
 
 
-# Written with the kind help of chatGPT but tested on a few examples
+# /\ /\ Code above written with the kind help of chatGPT but tested on a few examples
+def _coerce_boolean(s: pd.Series) -> pd.Series:
+    # robust mapping that tolerates 1/0, 1.0/0.0, strings, actual bools, and NaN
+    mapping = {
+        True: True, False: False,
+        1: True, 0: False,
+        1.0: True, 0.0: False,
+        "1": True, "0": False,
+        "True": True, "False": False,
+        "true": True, "false": False,
+    }
+    out = s.map(mapping).astype("boolean")  # pandas nullable boolean
+    return out
 
+
+def finalize_for_parquet(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    # 1) Booleans: normalize dtype across all known boolean columns
+    for col in (BOOL_COLS_AND | BOOL_COLS_OR):
+        if col in df.columns:
+            df[col] = _coerce_boolean(df[col])
+    return df
 
 def extract_boundary_tracks(p1, p2):
     p1["track_end_time"] = p1["track_start_time"] + p1["track_length"]
@@ -400,20 +419,21 @@ def combine_whole_year(config):
                         df_3_bound, df_2_bound = extract_boundary_tracks(df_3, df)
                         overlaping_clouds = merge_boundary_tracks(df_3_bound, df_2_bound, lat_tol=1e-4, lon_tol=1e-4)
                         df_3, df = apply_merged_rows(df_3, df, overlaping_clouds)
-                        analysis_df_list.append(df_3)  
+                        analysis_df_list.append(finalize_for_parquet(df_3))  
                     else:
                         print(f"Skiping merge {month} parts {part} and {part+1}")
-                    analysis_df_list.append(df)  
+                    
+                    analysis_df_list.append(finalize_for_parquet(df))  
                 else:
                     print(f"Skiping month {month}") 
                     if df_3 is not None:
-                        analysis_df_list.append(df_3)  
+                        analysis_df_list.append(finalize_for_parquet(df_3))  
                     else:
                         print(f"Skiping month {month} part 3")  
                 break
             else:
                 if df is not None:
-                    analysis_df_list.append(df)  
+                    analysis_df_list.append(finalize_for_parquet(df))  
                 else:
                     print(f"Skiping month {month} part {part}")
             # More general interpreatation - assumes that all parts are sequential in time
@@ -447,7 +467,7 @@ def combine_whole_year(config):
             #             df_next=None
             #     else:
             #         df_next=None
-            #     analysis_df_list.append(df)  
+            #     analysis_df_list.append(finalize_for_parquet(df))  
             # else:
             #     df_next=None
             #     print(f"Skiping month {month}") 
@@ -462,5 +482,5 @@ def combine_whole_year(config):
 
 if __name__=="__main__":
     print("Combining yearly files")
-    combine_whole_year(config_reader())
+    combine_whole_year(read_config())
     print("Period combined")

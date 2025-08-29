@@ -125,7 +125,11 @@ class Glaciation:
 
 def select_peaks(data, filt, significant_peak_tresh=0.2, glac_tresh=0.4):
     if not isinstance(data, (list, np.ndarray)):
-        data = data['ice_frac_hist']
+        if isinstance(data, pd.Series):
+            row = data
+            data = data['ice_frac_hist']
+        else:
+            raise ValueError("Input must be a list, numpy array, or pandas Series with 'ice_frac_hist' column.")
     if filt is not None:
         filt_data = np.array(filt(data))
     else:
@@ -133,21 +137,30 @@ def select_peaks(data, filt, significant_peak_tresh=0.2, glac_tresh=0.4):
     peaks = get_persistent_homology(filt_data)
     prev_peak = Peak(0)
     glac_list = []
-    for peak in peaks:
-        if peak.born > prev_peak.born+1:
-            if peak.get_persistence(filt_data) >= significant_peak_tresh:
-                # local_min = data[prev_peak.born:peak.born].min()
-                # print(f"{prev_peak.born},{peak.born}")
-                inter_peak_data = filt_data[prev_peak.born:peak.born]
-                local_min_ind = np.where(
-                    inter_peak_data == inter_peak_data.min())[0][-1]
-                local_min = inter_peak_data[local_min_ind]
-                if filt_data[peak.born] - local_min >= glac_tresh:
-                    glac_list.append(Glaciation(
-                        prev_peak.born + local_min_ind, peak.born, filt_data))
-                    glac_list[-1].estimate_glac_time(filt_data)
-                    # print("a")
-                prev_peak = peak
+    try:
+        for peak in peaks:
+            if peak.born > prev_peak.born+1:
+                if peak.get_persistence(filt_data) >= significant_peak_tresh:
+                    # local_min = data[prev_peak.born:peak.born].min()
+                    # print(f"{prev_peak.born},{peak.born}")
+                    inter_peak_data = filt_data[prev_peak.born:peak.born]
+                    local_min_ind = np.where(
+                        inter_peak_data == inter_peak_data.min())[0][-1]
+                    local_min = inter_peak_data[local_min_ind]
+                    if filt_data[peak.born] - local_min >= glac_tresh:
+                        glac_list.append(Glaciation(
+                            prev_peak.born + local_min_ind, peak.born, filt_data))
+                        glac_list[-1].estimate_glac_time(filt_data)
+                        # print("a")
+                    prev_peak = peak
+    except Exception as e:
+        print("Error in select_peaks:", e)
+        print("Data:", data)
+        print("Filtered Data:", filt_data)
+        print("Peaks:", peaks)
+        print("Row", row if 'row' in locals() else "N/A")
+        print("Exception:", e)
+        sys.exit(1)
     return glac_list
 
 
@@ -242,9 +255,11 @@ def extract_glaciations_whole_year(config):
     # combined_cloud_df = get_combined_cloud_df(config)
     year=config['start_time'].year
     glac_tresh=config.get("glac_threshold",0.4)
+    print("Loading combined yearly cloud dataframe")
     combined_cloud_df = pd.read_parquet(os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_all.parquet"))
-    print(combined_cloud_df)
+    print("Extracting glaciation events")
     result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=glac_tresh)
+    print("Generating glaciations dataframe")
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
     glac_df_path = os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_glac_{int(glac_tresh*10):02}.parquet")
     print(f"Writing glaciations to parquet: {glac_df_path}")
