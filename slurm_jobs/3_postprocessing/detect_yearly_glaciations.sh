@@ -15,7 +15,7 @@ fi
 postproc_job_ids=()
 
 for MONTH in {01..12}; do
-    for part in 01 02; do
+    for part in {01..03}; do
         config_name="${GTE_DIR}/configs/${YEAR}_tracking/${MONTH}_${part}.yaml"
         job_name="${MONTH}_${part}_${YEAR}_postproc"
         postproc_job_id=$(sbatch --parsable -J "$job_name" "${GTE_DIR}slurm_jobs/3_postprocessing/postproc_job.bsub" -c $config_name)
