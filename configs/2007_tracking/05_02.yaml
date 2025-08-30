@@ -3,8 +3,8 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20070515_1500"
-end_time: "20070601_0000"
+start_time: "20070515_0015"
+end_time: "20070515_1500"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
@@ -44,8 +44,8 @@ aux_fps:
 
 aux_fps_agg:
   {
-    "np": "/nfs/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
-    "sp": "/nfs/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
+    "np": "/nfs/n2o/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_np.nc",
+    "sp": "/nfs/n2o/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_sp.nc",
   }  
 
 #Location of the files used for the temporary grid when resampling is turned off
