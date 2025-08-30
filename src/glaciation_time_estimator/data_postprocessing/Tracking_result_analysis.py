@@ -420,13 +420,13 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config):
         part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
                                          pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat, lat=lat_mat)
        
-        # with Pool(n_procs) as pool:
-        #     pool.map(part_single_temp_range, range(
-        #         len(config['min_temp_arr'])))
-        #     pool.close()
-        #     pool.join()
-        for ind in range(len(config['min_temp_arr'])):
-            part_single_temp_range(ind)
+        with Pool(n_procs) as pool:
+            pool.map(part_single_temp_range, range(
+                len(config['min_temp_arr'])))
+            pool.close()
+            pool.join()
+        # for ind in range(len(config['min_temp_arr'])):
+        #     part_single_temp_range(ind)
 
 # def save_results(res_dict, config):
 #     min_temp, max_temp = config['min_temp_arr'][0], config['max_temp_arr'][0]

@@ -44,8 +44,8 @@ aux_fps:
 
 aux_fps_agg:
   {
-    "np": "/net/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggregated_aux_file.nc",
-    "sp": "/net/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggregated_aux_file.nc",
+    "np": "/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_np.nc",
+    "sp": "/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_sp.nc",
   }  
 
 
