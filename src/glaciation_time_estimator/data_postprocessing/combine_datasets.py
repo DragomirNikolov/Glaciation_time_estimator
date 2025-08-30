@@ -416,9 +416,10 @@ def combine_whole_year(config):
                 if df is not None:
                     print(f"Merging month {month} part {part} with next part {part+1}")
                     if df_3 is not None:
-                        df_3_bound, df_2_bound = extract_boundary_tracks(df_3, df)
-                        overlaping_clouds = merge_boundary_tracks(df_3_bound, df_2_bound, lat_tol=1e-4, lon_tol=1e-4)
-                        df_3, df = apply_merged_rows(df_3, df, overlaping_clouds)
+                        df_2_bound, df_3_bound = extract_boundary_tracks(df, df_3)
+                        overlaping_clouds = merge_boundary_tracks(df_2_bound, df_3_bound, lat_tol=1e-4, lon_tol=1e-4)
+                        print(overlaping_clouds)
+                        df, df_3 = apply_merged_rows(df, df_3, overlaping_clouds)
                         analysis_df_list.append(finalize_for_parquet(df_3))  
                     else:
                         print(f"Skiping merge {month} parts {part} and {part+1}")
