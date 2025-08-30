@@ -106,9 +106,16 @@ class Cloud:
         variance = np.average((values-average)**2, weights=weights)
         return (average, math.sqrt(variance))
 
+    def check_status_inputs(self, cloud_values,pixel_area, pixel_area_agg):
+        assert (~np.isnan(pixel_area).any()), "NaN values in pixel area array after filtering"
+        assert (~np.isnan(pixel_area_agg).any()).any(), "NaN values in pixel area array after filtering"
+        assert (pixel_area_agg > 0).all(), f"0 or negative values in aggregated pixel area array {pixel_area_agg}"
+        assert (len(pixel_area_agg) == len(cloud_values)), f"Length of pixel area array ({len(pixel_area)}) does not match length of cloud values array ({len(cloud_values)})"
+
     def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area, agg_pixel_area):
         ind_to_take = ~np.isnan(pixel_area)
         pixel_area = pixel_area[ind_to_take]
+        self.check_status_inputs(cloud_values, pixel_area, agg_pixel_area)
         if sum(pixel_area) == 0 or len(pixel_area)==0:
             error_message = f"""All pixel areas are zero or pixel area size is 0:\n
             Cloud_properties:

@@ -164,3 +164,5 @@ cython_debug/
 *.nc
 *.log
 *.eps
+!/grids/agg_pixel_area_np.nc
+!/grids/agg_pixel_area_sp.nc

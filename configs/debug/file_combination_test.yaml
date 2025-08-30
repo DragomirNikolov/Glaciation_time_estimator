@@ -44,8 +44,8 @@ aux_fps:
 
 aux_fps_agg:
   {
-    "np": "/net/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
-    "sp": "/net/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
+    "np": "/net/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggregated_aux_file.nc",
+    "sp": "/net/ch4/wolke_scratch/dnikolo/processed_daily/sp/aggregated_aux_file.nc",
   }  
 
 
@@ -65,7 +65,7 @@ grid_fps:
 # The analized time period shuld be available in both hemispheres for the program to work
 CLAAS_fp: "/net/ch4/wolke_scratch/dnikolo/CLAAS_Data/"
 # Folder where the netcdf cloud tracking location files are stored
-job_output_fp: "/net/ch4/wolke_scratch/dnikolo/dump/combination_test/"
+job_output_fp: "/wolke_scratch/dnikolo/Euler_backup/"
 
 ###############
 # Preprocessing settings

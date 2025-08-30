@@ -368,6 +368,11 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                         cloud_pix_area_values, cloud_lat_values, cloud_lon_values = extract_aux_vars(
                             aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr)
                         agg_pix_area_values = pix_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
+                        if not (agg_pix_area_values > 0).all():
+                            print(f"0 or negative values in aggregated pixel area array {agg_pix_area_values}")
+                            print(len(agg_pix_area_values))
+                            print(pix_arr_agg.shape)
+                            print(cloud_location_ind)
                         # print(f"Cloud location ind non agg 0: {cloud_location_ind_non_agg[0].shape}")
                         # print(f"Cloud pix area values: {cloud_pix_area_values[::9].shape}")
                         # assert (cloud_pix_area_values[::9].shape == cloud_cph_values.shape), f"Pixel area size array mismatch\npix_area:{cloud_pix_area_values[::9].shape}\n{cloud_cph_values.shape}\ncloud_location_ind 0: {cloud_location_ind[0]}\ncloud_location_ind 1: {cloud_location_ind[1]}\ncloud_location_ind_non_agg 0: {cloud_location_ind_non_agg[0][:-20]}\ncloud_location_ind_non_agg 1: {cloud_location_ind_non_agg[1][:-20]}"
@@ -411,16 +416,17 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config):
         lon_mat = aux_ds["lon"].load()
         pix_area = aux_ds["pixel_area"].load()
         pix_area_agg = aux_ds_agg["pixel_area"].load()
+        assert (~np.isnan(pix_area_agg.values).any()), "NaN values in aggregated pixel area array"
         part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
                                          pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat, lat=lat_mat)
        
-        with Pool(n_procs) as pool:
-            pool.map(part_single_temp_range, range(
-                len(config['min_temp_arr'])))
-            pool.close()
-            pool.join()
-        # for ind in range(len(config['min_temp_arr'])):
-        #     part_single_temp_range(ind)
+        # with Pool(n_procs) as pool:
+        #     pool.map(part_single_temp_range, range(
+        #         len(config['min_temp_arr'])))
+        #     pool.close()
+        #     pool.join()
+        for ind in range(len(config['min_temp_arr'])):
+            part_single_temp_range(ind)
 
 # def save_results(res_dict, config):
 #     min_temp, max_temp = config['min_temp_arr'][0], config['max_temp_arr'][0]
