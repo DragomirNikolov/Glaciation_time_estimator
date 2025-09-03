@@ -210,6 +210,9 @@ def get_combined_cloud_df(config):
 
 
 def extract_glaciation_events(df, glac_tresh=0.4):
+    if (df["max_ice_fraction"]-(1-df["max_water_frac"]) <= glac_tresh).all():
+        print("No glaciation events found")
+        return pd.DataFrame([])#columns=["Cloud_ID", "Time [m]", "Magnitude", "Glac_start_ind", "Glac_peak_ind", "Linear", "line_rmse", "Rate_arr", "Mean_glac_rate"])
     out_df = df[df["max_ice_fraction"]-(1-df["max_water_frac"]) > glac_tresh].copy()
     part_select_peaks = partial(select_peaks, filt=None,significant_peak_tresh=glac_tresh/2,glac_tresh=glac_tresh)
     out_df["glac_list"] = df.apply(part_select_peaks, axis=1)
@@ -259,6 +262,8 @@ def extract_glaciations_whole_year(config):
     combined_cloud_df = pd.read_parquet(os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_all.parquet"))
     print("Extracting glaciation events")
     result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=glac_tresh)
+    if result_df.empty():
+        raise ValueError("No glaciation events found for the year")
     print("Generating glaciations dataframe")
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
     glac_df_path = os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_glac_{int(glac_tresh*10):02}.parquet")

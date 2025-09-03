@@ -5,7 +5,7 @@ import os
 
 
 class ChunkLoader:
-    def __init__(self, years, config=None, config_fp=None):
+    def __init__(self, years, config=None, config_fp=None ,load_init_chunk=True):
         self.years = years
         if config is None:
             self.config = read_config(config_fp)
@@ -24,14 +24,16 @@ class ChunkLoader:
             for year in years
         }
         self.loaded_key = None
+        
         # initial load using full columns
-        self.load_single_chunk(years[0])
+        if load_init_chunk==True:
+            self.load_single_chunk(years[0])
 
     def __str__(self):
         return f"Dataset chunk loader\n \
                 Analyzing files: {self.cloud_fps}\n\
                 Currently loaded: {self.loaded_key}"
-    
+     
     def load_single_chunk(
         self,
         key,
