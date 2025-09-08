@@ -26,5 +26,5 @@ if __name__ == "__main__":
     # Set up analysis dataframe
     dataset = ChunkLoader(years,config=config, load_init_chunk=False)
     heatmaps = np.array(dataset.execute_analysis(extract_heatmap,load_glac=False,cloud_columns=["avg_lon","avg_lat"]))
-    heatmaps.tofile("/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Result_analysis/heatmap_data.np")
+    np.save("/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Result_analysis/Publication_figures/Multiyear_analysis/heatmap_data.npy",heatmap)
     
