@@ -106,6 +106,21 @@ class ChunkLoader:
 
         self.loaded_key = key
 
+    def load_next_chunk(self,load_clouds=True,
+        load_glac=True,
+        cloud_columns=None,
+        glac_columns=None,
+        force_reload=False
+    ):
+        """Load the next year from the years list"""
+        idx = self.years.index(self.loaded_key)
+        if idx+1<len(self.years):
+            self.load_single_chunk(idx+1,load_clouds,load_glac,cloud_columns,glac_columns,force_reload)
+        elif idx+1==len(self.years):
+            print("Final chunk already loaded. No new chunk loaded")
+        else:
+            raise ValueError("Index error when loading years")
+                
     def execute_analysis(
         self,
         analysis_func,
