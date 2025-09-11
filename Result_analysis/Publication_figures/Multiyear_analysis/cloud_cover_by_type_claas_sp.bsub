@@ -21,7 +21,7 @@ export HDF5_USE_FILE_LOCKING=FALSE
 module load stack/2024-06 gcc/12.2.0 openmpi/4.1.6 nco ffmpeg/6.0 hdf5 #python/3.11.6
 # Force overwrite for every CDO call
 cdo() { command cdo -O "$@"; }
-year=2010
+year=2009
 
 # Optional: define max number of parallel jobs
 MAXJOBS=8

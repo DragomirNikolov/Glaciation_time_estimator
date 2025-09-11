@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH -J test_preproc
-#SBATCH -t 03:00:00
+#SBATCH -J tot_cover_np
+#SBATCH -t 20:00:00
 #SBATCH -N 1
-#SBATCH -n 18
-#SBATCH --mem-per-cpu=1096
+#SBATCH -n 24
+#SBATCH --mem-per-cpu=4096
 #SBATCH --tmp=50000
 #SBATCH -q debug
 #SBATCH --mail-type=END,FAIL
@@ -12,22 +12,6 @@
 set -e
 
 date
-
-print_usage() {
-    printf "Usage: ..."
-}
-# GTE_CONFIG_DIR="/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/config.yaml"
-while getopts 'c:' flag; do
-    case "${flag}" in
-    c) GTE_CONFIG_DIR=${OPTARG};;
-    *)
-        print_usage
-        exit 1
-        ;;
-    esac
-done
-
-
 
 #Copy files to local scratch
 # export TMPDIR="/cluster/work/climate/dnikolo/dump"
@@ -39,12 +23,18 @@ ENV_BIN_DIR=/cluster/work/climate/dnikolo/flex_trkr_2/bin
 #Change variable to counteract a common error in PyFLEXTRKR
 export HDF5_USE_FILE_LOCKING=FALSE
 module load stack/2024-06 gcc/12.2.0 openmpi/4.1.6 nco ffmpeg/6.0 hdf5 #python/3.11.6
-
 #Load pyflextrkr python
 source "${ENV_BIN_DIR}"/activate
 cd $GTE_DIR || exit
 echo "GTE_CONFIG_DIR is ${GTE_CONFIG_DIR}"
-python $GTE_DIR/runscripts/Preprocessing_pipeline.py -cf $GTE_CONFIG_DIR
+python /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Result_analysis/Publication_figures/Multiyear_analysis/calc_total_cover_claas.py \
+  --base /nfs/ch4/wolke_scratch/dnikolo/CLAAS_Data \
+  --output /nfs/ch4/wolke_scratch/dnikolo/processed_daily_cph \
+  --year 2010 \
+  --workers 8 \
+  --groups np \
+  --verbose
+
 if [ $? -ne 0 ]; then
     echo "Python script failed, exiting."
     exit 1

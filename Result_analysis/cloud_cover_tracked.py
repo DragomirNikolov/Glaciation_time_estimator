@@ -75,7 +75,7 @@ def build_cdo_cmd(day_files, out_file, silent=True):
         cmd.append('-s')
     cmd += ['-L', '-timmean', '-gtc,0', '-mergetime']
     for f in day_files:
-        cmd += ['-selvar,feature_number', f]
+        cmd += ['-selvar,cph_filtered', f]
     cmd.append(out_file)
     return cmd
 

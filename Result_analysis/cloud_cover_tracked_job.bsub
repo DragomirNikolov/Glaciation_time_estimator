@@ -29,7 +29,7 @@ cd $GTE_DIR || exit
 echo "GTE_CONFIG_DIR is ${GTE_CONFIG_DIR}"
 python /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/Result_analysis/cloud_cover_tracked.py \
       --base /nfs/n2o/wolke_scratch/dnikolo/Euler_backup \
-      --output /nfs/n2o/wolke_scratch/dnikolo/processed_daily \
+      --output /nfs/n2o/wolke_scratch/dnikolo/processed_daily_all \
       --year 2010 \
       --workers 8
 if [ $? -ne 0 ]; then
