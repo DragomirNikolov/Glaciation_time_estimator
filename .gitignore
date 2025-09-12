@@ -164,5 +164,9 @@ cython_debug/
 *.nc
 *.log
 *.eps
+/Result_analysis/Publication_figures/Methods/Tracking_data/
+/Result_analysis/Publication_figures/Methods/Tracking_data/*
 !/grids/agg_pixel_area_np.nc
 !/grids/agg_pixel_area_sp.nc
+!/Result_analysis/Publication_figures/Multiyear_analysis/*
+!/Result_analysis/Publication_figures/CLAAS_processing_data/*
