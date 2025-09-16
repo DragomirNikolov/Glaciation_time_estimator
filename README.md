@@ -61,8 +61,8 @@ The processing is divided into the following steps:
 The processing pipeline is visualised in the figure below:  
 ![preprocessing_pipeline_2](https://github.com/user-attachments/assets/ed675179-9c12-4b47-9825-d2b913d64633)
 
-## 6. Figures
-The code in this repository was used to generate the figures in the paper "How complete is cloud glaciation?". The following jupyter notebooks contain all the necessary code to reproduce them:
+## 6. Manuscript figures
+The code in this repository was used to generate the figures in the manuscript "How complete is cloud glaciation?". The following jupyter notebooks contain all the necessary code to reproduce them:
 ```bash
 # ------------------------------------------
 # Methods figure
@@ -108,6 +108,9 @@ For additional information you can contact me at the following emails [dnikolo@e
 
 ## 8. Acknowledgements  
 Thank you to the members of CM-SAF for the rapid and flexible responce to our CLAAS-3 data requests.
+
+## 9. Future updates
+Major updates to the code will be pblished to zenodo in the future. Smaller bugfixes and updates can be found on the [github repository](https://github.com/DragomirNikolov/Glaciation_time_estimator)
 
 <!--  1. **Preprocessing**  
    - Resampling is performed to convert geostationary data to a regular latitude/longitude reference frame.  

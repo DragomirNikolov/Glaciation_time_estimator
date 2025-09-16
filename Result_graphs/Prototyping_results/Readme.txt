@@ -1,0 +1,1 @@
+This folder contains results from all sorts of algorithm and dataset prototypes. Figures are not representative of the final dataset.
