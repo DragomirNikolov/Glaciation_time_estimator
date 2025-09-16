@@ -1,0 +1,2 @@
+Be wary that the figures in this folder were generated using only one year (2022 or 2007) of data produced by an earlier version of the algorithm. 
+Their validity should still hold in general, but an influence from earlier unfixed bugs may be present.

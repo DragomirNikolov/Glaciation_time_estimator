@@ -3,8 +3,8 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20090515_1500"
-end_time: "20090601_0000"
+start_time: "20070515_1500"
+end_time: "20070601_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
@@ -23,7 +23,7 @@ n_month_parts: 2
 #      02_<n_month_parts>.yaml
 #      ...
 #      12_<n_month_parts>.yaml
-yearly_config_folder: "/wolke_scratch/dnikolo/Glaciation_time_estimator/configs"
+yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs"
 
 ########################
 # Data structure and location
@@ -43,11 +43,10 @@ aux_fps:
     "sp": "/wolke_scratch/dnikolo/CLAAS_Data/sp/CM_SAF_CLAAS3_L2_AUX.nc",
   }
 
-# Auxiliary files filepaths dictionary on the second server. There should be a member for each pole folder
-aux_fps_eu:
+aux_fps_agg:
   {
-    "np": "/cluster/work/climate/dnikolo/Auxiliary_files/CM_SAF_CLAAS3_L2_AUX_NP.nc",
-    "sp": "/cluster/work/climate/dnikolo/Auxiliary_files/CM_SAF_CLAAS3_L2_AUX_SP.nc",
+    "np": "/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
+    "sp": "/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
   }  
 
 #Location of the files used for the temporary grid when resampling is turned off
@@ -64,9 +63,9 @@ grid_fps:
 #        .../{pole_folders[1]}/YYYY/MM/DD
 #        etc.
 # The analized time period shuld be available in both hemispheres for the program to work
-CLAAS_fp: "wolke_scratch/dnikolo/CLAAS_Data/"
+CLAAS_fp: "/wolke_scratch/dnikolo/CLAAS_Data/"
 # Folder where the netcdf cloud tracking location files are stored
-job_output_fp: "/wolke_scratch/dnikolo/"
+job_output_fp: "eu:/cluster/work/climate/dnikolo/Job_output/"
 
 ###############
 # Preprocessing settings
@@ -95,22 +94,19 @@ postprocessing_fast_mode: False
 fast_mode_arr_size: 20000
 
 # Folder to output the cloud and glaciation properties parquet (and CSV) files
-postprocessing_output_dir: /wolke_scratch/dnikolo/
+postprocessing_output_dir: "/wolke_scratch/dnikolo/"
 #Format of the postprocessing_output_dir subfolder name in which the outputs from a given run are stored
 time_folder_format: "%Y%m%d.%H%M"
-n_postproc_cores: 4
+
 # Should the program output a CSV file with cloud and glaciation properties on top of the standard parquet binary 
 # Turn on for readability
 write_csv: True
-
+n_postproc_cores: 4
 # Defined as every analisis done outside cloud top phase and cloud top temperature
 # Defined as 
 collect_additional_properties: True
 
 # The standard RMSE used to determine wether a glaciation is linear. Read more in the documentation.
 Global_sqrt_mse: 0.05628526744657018
-# Glaciation threshold
 glac_threshold: 0.4
-
-
 
