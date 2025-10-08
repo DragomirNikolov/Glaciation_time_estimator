@@ -3,13 +3,13 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20070515_1500"
-end_time: "20070601_0000"
+start_time: "20080501_0000"
+end_time: "20080502_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
 #Is this file used to set up an analysis of a whole year of data
-Analyze_year: Yes
+Analyze_year: False
 # In how many parts are the months in this year split
 n_month_parts: 2
 # The folder which contains the following structure:
@@ -73,10 +73,10 @@ job_output_fp: "eu:/cluster/work/climate/dnikolo/Job_output/"
 # Should the file be resampled.
 # If true the code first resamples the original CLAAS-3 L2 geostationary grid to a regular lat-lon grid
 # Reccomended - Resample: False. No claims are made about the functtioning and accuracy of the resampled outputs
-Resample: False
+Resample: True
 # The program aggregates the file in a agg_fact x agg_fact squares as explained in the documentation
 # Reccomended - agg_fact: 3
-agg_fact: 3
+agg_fact: 20
 # Total number of cores working on the preprocessing
 # To turn multiprocessing off set this to 1
 n_preproc_cores: 2

@@ -106,8 +106,8 @@ The dataset post-processing used to generate the presented data can be found in
 ## 7. Contact 
 For additional information you can contact me at the following emails [dnikolo@ethz.ch](dnikolo@ethz.ch) or [dragomird.nikolov@gmail.com](dragomird.nikolov@gmail.com)
 
-## 8. Acknowledgements  
-Thank you to the members of CM-SAF for the rapid and flexible responce to our CLAAS-3 data requests.
+## 8. Acknowledgements
+I would like to thank Prof. Ulrike Lohmann and Dr. Diego Villanueva for their supervision of this project. I am also grateful to the members of CM-SAF for their rapid and flexible response to our CLAAS-3 data requests. Finally, I wish to express my gratitude to Sylvaine Ferrachat and the other members of the ETH Group of Atmospheric Physics for their assistance in setting up the computational and storage resources needed for this project.
 
 ## 9. Future updates
 Major updates to the code will be pblished to zenodo in the future. Smaller bugfixes and updates can be found on the [github repository](https://github.com/DragomirNikolov/Glaciation_time_estimator)

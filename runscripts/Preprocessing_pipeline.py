@@ -118,6 +118,7 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
     # Generate output file and save result
     resample_res_fps = folder_resample_res_fps[folder_fp_ind]
     agg_res_fps = folder_agg_res_fps[folder_fp_ind]
+    print("Saving to ", resample_res_fps)
     output_file.save_file(resample_res_fps)
     # Close dataset
     input_cpp_ds.close()
@@ -201,6 +202,11 @@ def prepare_pole(pole, target_filenames, config, n_workers):
         aux_data = xr.load_dataset(os.path.join(
             CLAAS_FP, aux_fps[pole]), decode_times=False)
         transformer.generate_lat_lon_prj(aux_data)
+        print("Generating neighbor cache for pole ", pole)
+        transformer.build_neighbor_cache()
+        cahce_dir  = os.path.join(os.environ["TMPDIR"],f"neighbor_cache_{pole}.npz")
+        transformer.save_neighbor_cache(cahce_dir)
+        transformer.load_neighbor_cache(cahce_dir)
         preparation_worker = partial(resample_folder, aux_data=aux_data, agg_fact=agg_fact, folder_fps_CTX=folder_fps_CTX, folder_fps_CPP=folder_fps_CPP,
                                      folder_resample_res_fps=folder_resample_res_fps, folder_agg_res_fps=folder_agg_res_fps, transformer=transformer)
     else:
