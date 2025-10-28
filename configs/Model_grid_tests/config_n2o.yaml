@@ -3,8 +3,8 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20080501_0000"
-end_time: "20080502_0000"
+start_time: "20090501_0000"
+end_time: "20090502_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
@@ -104,7 +104,7 @@ write_csv: True
 n_postproc_cores: 4
 # Defined as every analisis done outside cloud top phase and cloud top temperature
 # Defined as 
-collect_additional_properties: True
+collect_additional_properties: False
 
 # The standard RMSE used to determine wether a glaciation is linear. Read more in the documentation.
 Global_sqrt_mse: 0.05628526744657018
