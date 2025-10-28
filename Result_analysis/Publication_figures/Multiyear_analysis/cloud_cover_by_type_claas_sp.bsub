@@ -27,9 +27,8 @@ year=2009
 MAXJOBS=8
 
 CLAAS_DIR=/nfs/ch4/wolke_scratch/dnikolo/CLAAS_Data/
-# for month_dir in "${CLAAS_DIR}sp/${year}"/*/
-# do
-month_dir="${CLAAS_DIR}np/${year}/08/"
+for month_dir in "${CLAAS_DIR}sp/${year}"/{01..06}/; do
+# month_dir="${CLAAS_DIR}np/${year}/08/"
 for day_dir in "${month_dir}"/*/
 do
     (
@@ -109,5 +108,5 @@ done
 
 # After launching all days in parallel, wait for them to finish before next month
 wait
-# done
+done
 date

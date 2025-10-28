@@ -115,7 +115,7 @@ class Cloud:
     def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area, agg_pixel_area):
         ind_to_take = ~np.isnan(pixel_area)
         pixel_area = pixel_area[ind_to_take]
-        self.check_status_inputs(cloud_values, pixel_area, agg_pixel_area)
+               
         if sum(pixel_area) == 0 or len(pixel_area)==0:
             error_message = f"""All pixel areas are zero or pixel area size is 0:\n
             Cloud_properties:
@@ -133,9 +133,9 @@ class Cloud:
             Cloud_lon: {cloud_lon}
             """
             raise ValueError(error_message)
-        cot_values = cot_values[ind_to_take]
-        ctp_values = ctp_values[ind_to_take]
-        ctt_values = ctt_values[ind_to_take]
+        cot_values = cot_values[ind_to_take] if cot_values.size !=0 else None
+        ctp_values = ctp_values[ind_to_take] if ctp_values.size !=0 else None
+        ctt_values = ctt_values[ind_to_take] if ctt_values.size !=0 else None
         cloud_lat = cloud_lat[ind_to_take]
         cloud_lon = cloud_lon[ind_to_take]
         cloud_size_px = cloud_values.shape[0]
@@ -144,6 +144,9 @@ class Cloud:
             cloud_lon = np.average(cloud_lon, weights=pixel_area)
             # cloud_lat = 10
             # cloud_lon = 10
+        else:
+            cloud_lat = np.average(cloud_lat, weights=pixel_area)
+            cloud_lon = np.average(cloud_lon, weights=pixel_area)
         # print(cloud_values)
         if cloud_size_px:
             self.n_timesteps_no_cloud = 0
@@ -172,15 +175,15 @@ class Cloud:
                 self.is_mix = True
             else:
                 self.is_ice = True
-            if self.is_resampled:
-                cloud_size_km = pixel_area*cloud_size_px * \
-                    np.cos(np.deg2rad(cloud_lat))*111.321*111.111
-            else:
-                cloud_size_km = pixel_area.sum()
-                large_pixel_frac = np.count_nonzero(
-                    pixel_area > 66)/pixel_area.shape[0]
-                if large_pixel_frac > 0.1 or pixel_area.max() > 110:
-                    self.large_pixel_cloud = True
+            # if self.is_resampled:
+            #     cloud_size_km = sum(pixel_area*cloud_size_px * \
+            #         np.cos(np.deg2rad(cloud_lat))*111.321*111.111)
+            # else:
+            cloud_size_km = pixel_area.sum()
+            large_pixel_frac = np.count_nonzero(
+                pixel_area > 66)/pixel_area.shape[0]
+            if large_pixel_frac > 0.1 or pixel_area.max() > 110:
+                self.large_pixel_cloud = True
             self.cloud_size_km_list.append(cloud_size_km)
             self.max_size_km = max(self.max_size_km, cloud_size_km)
             self.min_size_km = min(self.min_size_km, cloud_size_km)
@@ -216,10 +219,12 @@ class Cloud:
 
             # self.ice_fraction_arr[n_timesteps]=ice_fraction
             self.ice_fraction_list.append(ice_fraction)
-
-            self.update_cot_variables(cot_values, pixel_area)
-            self.update_ctp_variables(ctp_values, pixel_area)
-            self.update_ctt_variables(ctt_values, pixel_area)
+            if cot_values is not None:
+                self.update_cot_variables(cot_values, pixel_area)
+            if ctp_values is not None:
+                self.update_ctp_variables(ctp_values, pixel_area)
+            if ctt_values is not None:
+                self.update_ctt_variables(ctt_values, pixel_area)
             
 
     def update_cot_variables(self, cot_values, pixel_area):
