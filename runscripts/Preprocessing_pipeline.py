@@ -88,11 +88,33 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
     # Open relevant datasets
     # print(len(folder_fps_CTX[folder_fp_ind]))
     # print(len(folder_fps_CPP[folder_fp_ind]))
-    input_ctx_ds = xr.open_mfdataset(
-        list(folder_fps_CTX[folder_fp_ind]), parallel=True, chunks={"time": len(folder_fps_CTX[folder_fp_ind]), "x": aux_data.sizes["x"], "y": aux_data.sizes["y"]})
-    input_cpp_ds = xr.open_mfdataset(
-        list(folder_fps_CPP[folder_fp_ind]), parallel=True, chunks={"time": len(folder_fps_CPP[folder_fp_ind]), "x": aux_data.sizes["x"], "y": aux_data.sizes["y"]})
+    # input_ctx_ds = xr.open_mfdataset(
+    #     list(folder_fps_CTX[folder_fp_ind]), parallel=True, chunks={"time": len(folder_fps_CTX[folder_fp_ind]), "x": aux_data.sizes["x"], "y": aux_data.sizes["y"]})
+    # input_cpp_ds = xr.open_mfdataset(
+    #     list(folder_fps_CPP[folder_fp_ind]), parallel=True, chunks={"time": len(folder_fps_CPP[folder_fp_ind]), "x": aux_data.sizes["x"], "y": aux_data.sizes["y"]})
 
+
+    # right before open_mfdataset calls
+    # xr.set_options(file_cache_maxsize=0)
+
+    input_ctx_ds = xr.open_mfdataset(
+        list(folder_fps_CTX[folder_fp_ind]),
+        engine="h5netcdf",
+        parallel=True,
+        chunks={ "time": len(folder_fps_CTX[folder_fp_ind]),
+                "x": aux_data.sizes["x"], "y": aux_data.sizes["y"] },
+        combine="by_coords",
+        lock=False
+    )
+    input_cpp_ds = xr.open_mfdataset(
+        list(folder_fps_CPP[folder_fp_ind]),
+        engine="h5netcdf",
+        parallel=True,
+        chunks={ "time": len(folder_fps_CPP[folder_fp_ind]),
+                "x": aux_data.sizes["x"], "y": aux_data.sizes["y"] },
+        combine="by_coords",
+        lock=False
+    )
     output_file = OutputResampledFile(
         input_cpp_ds, agg_fact=1)
     # Add coordinate variables to the output file

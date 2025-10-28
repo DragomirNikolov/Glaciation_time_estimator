@@ -96,7 +96,9 @@ class ProjectionTransformer():
             raise NotImplementedError("2D var field remapping not yet added")
 
         # Data as (y, x, time)
-        data = var_field.transpose("y", "x", "time").values
+        var_tyx = var_field.transpose("y", "x", "time").load()  # keeps files open until read completes
+        data = var_tyx.values  # numpy array now
+        # data = var_field.transpose("y", "x", "time").values
         nt = data.shape[2]
 
         # If we have a matching neighbor cache, use it; else fall back
