@@ -5,8 +5,8 @@
 # The date and time are in the format YYYYMMDD_HHMM
 # start_time: "20090501_0000"
 # end_time: "20090502_0000"
-start_time: "20090101_0000"
-end_time: "20090102_0000"
+start_time: "20090501_0000"
+end_time: "20090502_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
@@ -75,7 +75,7 @@ job_output_fp: "eu:/cluster/work/climate/dnikolo/Job_output/"
 # Should the file be resampled.
 # If true the code first resamples the original CLAAS-3 L2 geostationary grid to a regular lat-lon grid
 # Reccomended - Resample: False. No claims are made about the functtioning and accuracy of the resampled outputs
-Resample: True
+Resample: False
 # The program aggregates the file in a agg_fact x agg_fact squares as explained in the documentation
 # Reccomended - agg_fact: 3
 agg_fact: 20

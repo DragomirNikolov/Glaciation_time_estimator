@@ -19,7 +19,6 @@ if [ -z "$GTE_CONFIG_DIR" ]; then
     exit 1
 fi
 
-agg_fact=3
 job_ids=()
 config_name="${GTE_CONFIG_DIR##*/}"
 # for dt in 3 5 6; do
@@ -29,9 +28,9 @@ for dt in 6; do
         max_temp=$((min_temp - dt))
         for pole in "np" "sp"; do
             if [ -z "$YEAR" ]; then
-                name=T_"$min_temp"_"$max_temp"_"$agg_fact"_"$pole"_"${config_name::-5}"
+                name=T_"$min_temp"_"$max_temp"_"$pole"_"${config_name::-5}"
             else
-                name=T_"$min_temp"_"$max_temp"_"$agg_fact"_"$pole"_"${config_name::-5}"_"$YEAR"
+                name=T_"$min_temp"_"$max_temp"_"$pole"_"${config_name::-5}"_"$YEAR"
             fi
             if [ -z "$init_dependency" ]; then
                 if [ -z "$wait_time" ]; then
