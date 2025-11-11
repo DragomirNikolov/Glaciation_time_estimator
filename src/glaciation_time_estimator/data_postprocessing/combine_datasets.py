@@ -402,6 +402,7 @@ def extract_boundary_tracks(p1, p2):
     p1["track_end_time"] = p1["track_start_time"] + p1["track_length"]
     p2["track_end_time"] = p2["track_start_time"] + p2["track_length"]
     return p1[p1["track_end_time"] == p1["track_end_time"].max()], p2[p2["track_start_time"] == p2["track_start_time"].min()]
+    
 
 
 # Loads datasets sequentially

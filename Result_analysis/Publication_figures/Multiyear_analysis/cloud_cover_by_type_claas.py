@@ -6,31 +6,46 @@ Re-implements your day-by-day CDO workflow (merging CTX+CPP, AUX merge,
 filters, category areas, fldsum, fractions, timmean) in Python using
 multiprocessing (ProcessPoolExecutor).
 
+New: per-group AUX support
+--------------------------
+- You can provide different AUX files for np and sp via --aux-np and --aux-sp.
+- If not provided, the script falls back to --aux (same for all groups).
+- If none are provided, it tries <base>/<group>/CM_SAF_CLAAS3_L2_AUX.nc.
+
 Key features
 ------------
 - Scans <base>/<group>/<YYYY>/<MM>/<DD>/ for CTXin* and CPPin* files.
 - Runs each *day* as an independent job in parallel.
-- Uses temporary intermediates per day and cleans them up.
+- Uses temporary intermediates per day and cleans them up (unless --keep-intermediate).
 - Skips days that already have an output unless --overwrite is used.
-- Lets you pick groups (e.g., np sp) or auto-detect.
+- Lets you pick groups (e.g., np sp) or auto-detect from <base>.
 
 Output layout
 -------------
   <output_root>/<group>/<YYYY>_<MM>_<DD>.nc
 
-Example
--------
-  python process_claas_cloud_classes_parallel.py \
-      --base /wolke_scratch/dnikolo/CLAAS_Data \
-      --output /wolke_scratch/dnikolo/Cloud_cover_by_class \
-      --aux /wolke_scratch/dnikolo/CLAAS_Data/sp/CM_SAF_CLAAS3_L2_AUX.nc \
-      --year 2009 --groups sp np --workers 8 --verbose
+Examples
+--------
+# Different AUX for np and sp
+python process_claas_cloud_classes_parallel.py \
+  --base /wolke_scratch/dnikolo/CLAAS_Data \
+  --output /wolke_scratch/dnikolo/Cloud_cover_by_class \
+  --year 2009 --groups sp np --workers 8 --verbose \
+  --aux-np /wolke_scratch/dnikolo/CLAAS_Data/np/CM_SAF_CLAAS3_L2_AUX.nc \
+  --aux-sp /wolke_scratch/dnikolo/CLAAS_Data/sp/CM_SAF_CLAAS3_L2_AUX.nc
+
+# Single AUX for all groups
+python process_claas_cloud_classes_parallel.py \
+  --base /wolke_scratch/dnikolo/CLAAS_Data \
+  --output /wolke_scratch/dnikolo/Cloud_cover_by_class \
+  --aux /wolke_scratch/dnikolo/CLAAS_Data/sp/CM_SAF_CLAAS3_L2_AUX.nc \
+  --year 2009 --groups sp np --workers 8
 
 Notes
 -----
 - Requires CDO available on PATH. Mirrors your bash pipeline semantics.
 - Sets OMP_NUM_THREADS=1 and HDF5_USE_FILE_LOCKING=FALSE to avoid oversubscription
-  and common HDF5 parallel FS locking issues.
+  and HDF5 locking issues on parallel filesystems.
 """
 
 from __future__ import annotations
@@ -101,10 +116,22 @@ def build_day_output(output_root: str, group: str, day_str: str) -> str:
     return os.path.join(output_root, group, f"{y}_{m}_{d}.nc")
 
 
-def process_one_day(task, *, aux_path: str, output_root: str, overwrite: bool,
+def resolve_aux_for_group(base_root: str, group: str, aux: str | None, aux_np: str | None, aux_sp: str | None) -> str:
+    # Priority: group-specific flag -> global --aux -> default location under base/group
+    if group == 'np' and aux_np:
+        return aux_np
+    if group == 'sp' and aux_sp:
+        return aux_sp
+    if aux:
+        return aux
+    candidate = os.path.join(base_root, group, 'CM_SAF_CLAAS3_L2_AUX.nc')
+    return candidate
+
+
+def process_one_day(task, *, output_root: str, overwrite: bool,
                     keep_intermediate: bool = False, verbose: bool = False):
-    """Run the full CDO chain for a single (group, day, ctx_files, cpp_files) task."""
-    group, day_str, ctx_files, cpp_files = task
+    """Run the full CDO chain for a single (group, day, ctx_files, cpp_files, aux_path) task."""
+    group, day_str, ctx_files, cpp_files, aux_path = task
 
     # Sanity checks
     if not ctx_files:
@@ -133,10 +160,10 @@ def process_one_day(task, *, aux_path: str, output_root: str, overwrite: bool,
         tmp_cover = os.path.join(tmpdir, "class_cover.nc")
 
         # 1) Merge CTX and CPP selections over time
-        run(['cdo', '-O', '-L', '-setmissval,0', '-mergetime', '-apply,-selname,ctt,ctp',
-             *ctx_files, tmp_ctx], verbose)
-        run(['cdo', '-O', '-L', '-setmissval,0', '-mergetime', '-apply,-selname,cot',
-             *cpp_files, tmp_cpp], verbose)
+        run(['cdo', '-O', '-L', '-setmissval,0', '-mergetime', '-apply,-selname,ctt,ctp','[',
+             *ctx_files,']', tmp_ctx], verbose)
+        run(['cdo', '-O', '-L', '-setmissval,0', '-mergetime', '-apply,-selname,cot','[',
+             *cpp_files,']', tmp_cpp], verbose)
 
         # 2) Merge CTX+CPP then AUX
         run(['cdo', '-O', 'merge', tmp_ctx, tmp_cpp, tmp_total], verbose)
@@ -196,9 +223,11 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument('--base', default='/wolke_scratch/dnikolo/CLAAS_Data', help='Base CLAAS input root')
     ap.add_argument('--output', default='/wolke_scratch/dnikolo/Cloud_cover_by_class', help='Output root')
-    ap.add_argument('--aux', required=True, help='Path to CM_SAF_CLAAS3_L2_AUX.nc (contains pixel_area)')
+    ap.add_argument('--aux', help='Single AUX path used for all groups (fallback if group-specific not given)')
+    ap.add_argument('--aux-np', dest='aux_np', help='AUX path for the np group')
+    ap.add_argument('--aux-sp', dest='aux_sp', help='AUX path for the sp group')
     ap.add_argument('--year', required=True, type=int, help='Year to process (e.g., 2009)')
-    ap.add_argument('--groups', nargs='*', help='Limit to these groups, e.g. np sp. Default: auto-detect under --base')
+    ap.add_argument('--groups', nargs='*', help='Limit to these groups, e.g., np sp. Default: auto-detect under --base')
     ap.add_argument('--workers', type=int, default=4, help='Parallel day-jobs')
     ap.add_argument('--overwrite', action='store_true', help='Overwrite existing outputs')
     ap.add_argument('--keep-intermediate', action='store_true', help='Keep per-day temp NetCDFs for debugging')
@@ -209,14 +238,16 @@ def main():
     if not groups:
         raise SystemExit(f"No group directories found under {args.base}")
 
-    # Discover day jobs
+    # Discover day jobs + resolve AUX per task
     tasks = []
     for group in groups:
+        # Determine AUX for this group
+        aux_for_group = resolve_aux_for_group(args.base, group, args.aux, args.aux_np, args.aux_sp)
         for d in iter_days_of_year(args.year):
             day = d.strftime('%Y%m%d')
             ctx, cpp = list_day_files(args.base, group, day)
             if ctx and cpp:
-                tasks.append((group, day, ctx, cpp))
+                tasks.append((group, day, ctx, cpp, aux_for_group))
     total = len(tasks)
     print(f"Discovered {total} day-jobs across groups: {', '.join(groups)}.")
     if total == 0:
@@ -224,7 +255,6 @@ def main():
 
     worker = partial(
         process_one_day,
-        aux_path=args.aux,
         output_root=args.output,
         overwrite=args.overwrite,
         keep_intermediate=args.keep_intermediate,
@@ -262,3 +292,10 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+# python process_claas_cloud_classes_parallel.py \
+#   --base /wolke_scratch/dnikolo/CLAAS_Data \
+#   --output /wolke_scratch/dnikolo/dump/Cloud_cover_by_class \
+#   --year 2009 --groups sp np --workers 8 \
+#   --aux-np /wolke_scratch/dnikolo/CLAAS_Data/np/CM_SAF_CLAAS3_L2_AUX.nc \
+#   --aux-sp /wolke_scratch/dnikolo/CLAAS_Data/sp/CM_SAF_CLAAS3_L2_AUX.nc

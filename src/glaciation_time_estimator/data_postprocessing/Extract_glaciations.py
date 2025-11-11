@@ -251,6 +251,25 @@ def save_glac_df(glaciations_df, config):
             glaciations_df.to_csv(output_dir_csv)
 
 
+def extract_glaciations_single_period(config):
+    global global_rmse
+    global_rmse = config["Global_sqrt_mse"]
+    glac_tresh=config.get("glac_threshold",0.4)
+    print("Loading cloud dataframe")
+    combined_cloud_df = get_combined_cloud_df(config)
+    result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=glac_tresh)
+    if result_df.empty:
+        raise ValueError("No glaciation events found for the year")
+    print("Generating glaciations dataframe")
+    glaciations_df = gen_glac_df(result_df, combined_cloud_df)
+    folder_name = f"{config['start_time'].strftime(config['time_folder_format'])}_{config['end_time'].strftime(config['time_folder_format'])}"
+    glac_df_path = os.path.join(config['postprocessing_output_dir'],"Results",f"Agg_{config['agg_fact']:02}_Glaciations_{folder_name}.parquet")
+    os.makedirs(os.path.dirname(glac_df_path), exist_ok=True)
+    print(f"Writing glaciations to parquet: {glac_df_path}")
+    glaciations_df.to_parquet(glac_df_path)
+    # combined_cloud_df = pd.read_parquet(os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_all.parquet"))
+    
+
 def extract_glaciations_whole_year(config):
     global global_rmse
     global_rmse = config["Global_sqrt_mse"]
@@ -262,7 +281,7 @@ def extract_glaciations_whole_year(config):
     combined_cloud_df = pd.read_parquet(os.path.join(config['postprocessing_output_dir'],"Final_results",f"{year}_all.parquet"))
     print("Extracting glaciation events")
     result_df = extract_glaciation_events(combined_cloud_df, glac_tresh=glac_tresh)
-    if result_df.empty():
+    if result_df.empty:
         raise ValueError("No glaciation events found for the year")
     print("Generating glaciations dataframe")
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
@@ -275,6 +294,4 @@ def extract_glaciations_whole_year(config):
 
 if __name__ == "__main__":
     config = read_config()
-    
-    
     extract_glaciations_whole_year(config)
