@@ -17,12 +17,20 @@ def get_glaciations_df(config):
     agg_fact = config['agg_fact']
     folder_name = f"{config['start_time'].strftime(config['time_folder_format'])}_{config['end_time'].strftime(config['time_folder_format'])}"
     pole=config["pole_folders"][0]
-    fp = os.path.join(
-                config['postprocessing_output_dir'],
-                pole,
-                folder_name,
-                f"Agg_{agg_fact:02}_Glaciations.parquet"
-            )
+    if config["Resampling"]:
+        fp = os.path.join(
+                    config['postprocessing_output_dir'],
+                    pole,
+                    folder_name,
+                    f"R_Agg_{agg_fact:02}_Glaciations.parquet"
+                )
+    else:
+        fp = os.path.join(
+                    config['postprocessing_output_dir'],
+                    pole,
+                    folder_name,
+                    f"Agg_{agg_fact:02}_Glaciations.parquet"
+                )
     try:
         return pd.read_parquet(fp)
     except FileNotFoundError:
@@ -46,12 +54,20 @@ def get_combined_cloud_df(config):
         # Iterate over each pole
         for pole in config["pole_folders"]:
             # Construct the file path
-            fp = os.path.join(
-                config['postprocessing_output_dir'],
-                pole,
-                folder_name,
-                f"Agg_{agg_fact:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}.parquet"
-            )
+            if config["Resampling"]:
+                fp = os.path.join(
+                    config['postprocessing_output_dir'],
+                    pole,
+                    folder_name,
+                    f"R_Agg_{agg_fact:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}.parquet"
+                )
+            else:
+                fp = os.path.join(
+                    config['postprocessing_output_dir'],
+                    pole,
+                    folder_name,
+                    f"Agg_{agg_fact:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}.parquet"
+                )
             print(f"fp searched: {fp}")
             # Read the parquet file into a dataframe
             try:

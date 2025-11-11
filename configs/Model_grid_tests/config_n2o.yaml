@@ -3,8 +3,10 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20090501_0000"
-end_time: "20090502_0000"
+# start_time: "20090501_0000"
+# end_time: "20090502_0000"
+start_time: "20090101_0000"
+end_time: "20090102_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]

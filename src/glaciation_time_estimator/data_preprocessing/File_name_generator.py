@@ -43,6 +43,7 @@ class MissingFilesSearcher:
         self.pole_split = config['pole_split']
         self.pole_folders = config['pole_folders']
         self.agg_fact = config['agg_fact']
+        self.do_resampling = config['Resample']
         self.exclude_existing = exclude_existing
         # self.boundary_date = datetime(
         #     year=2021, month=1, day=1, hour=0, minute=0, second=0)
@@ -74,8 +75,12 @@ class MissingFilesSearcher:
         for temp_ind in range(len(self.temps_to_check[0])):
             min_temp = self.temps_to_check[0][temp_ind]
             max_temp = self.temps_to_check[1][temp_ind]
-            filtered_fp_format = os.path.join(
-                CLAAS_FP_POLE, f"%Y/%m/%d/Agg_{self.agg_fact:02}_T_{max_temp:02}_{min_temp:02}_%Y%m%d%H%M%S.nc")
+            if self.do_resampling:
+                filtered_fp_format = os.path.join(
+                    CLAAS_FP_POLE, f"%Y/%m/%d/R_Agg_{self.agg_fact:02}_T_{max_temp:02}_{min_temp:02}_%Y%m%d%H%M%S.nc")
+            else:
+                filtered_fp_format = os.path.join(
+                    CLAAS_FP_POLE, f"%Y/%m/%d/Agg_{self.agg_fact:02}_T_{max_temp:02}_{min_temp:02}_%Y%m%d%H%M%S.nc")
             filtered_first_dt_filenames.append(
                 np.array(self.gen_filename_list(file_format=filtered_fp_format)))
         filtered_first_dt_filenames = np.array(
@@ -112,8 +117,12 @@ class MissingFilesSearcher:
         return resample_ind
 
     def gen_filenames_to_filter(self, CLAAS_FP_POLE):
-        resampled_fp_format = os.path.join(
-            CLAAS_FP_POLE, f"%Y/%m/%d/Agg_{self.agg_fact:02}_%Y%m%d%H%M%S.nc")
+        if self.do_resampling:
+            resampled_fp_format = os.path.join(
+                CLAAS_FP_POLE, f"%Y/%m/%d/R_Agg_{self.agg_fact:02}_%Y%m%d%H%M%S.nc")
+        else:
+            resampled_fp_format = os.path.join(
+                CLAAS_FP_POLE, f"%Y/%m/%d/Agg_{self.agg_fact:02}_%Y%m%d%H%M%S.nc")
         resample_filenames = np.array(
             self.gen_filename_list(file_format=resampled_fp_format))
         self.resample_ind = self.gen_resample_ind(
@@ -130,8 +139,12 @@ class MissingFilesSearcher:
         ind_to_resample = self.are_missing(self.filenames_to_filter)
         if ind_to_resample is not None:
             self.agg_result_names = self.filenames_to_filter[ind_to_resample]
-            self.resample_result_names = np.char.replace(
-                self.agg_result_names, f"Agg_{self.agg_fact:02}", "Agg_01")
+            if self.do_resampling:
+                self.resample_result_names = np.char.replace(
+                    self.agg_result_names, f"R_Agg_{self.agg_fact:02}", "R_Agg_01")
+            else:
+                self.resample_result_names = np.char.replace(
+                        self.agg_result_names, f"Agg_{self.agg_fact:02}", "Agg_01")
             # print(ind_to_resample)
             if (self.start_time < self.boundary_date) & (self.end_time < self.boundary_date):
                 self.cpp_files_to_resample = np.array(self.gen_filename_list(
@@ -201,14 +214,23 @@ class MissingFilesSearcher:
         for temp_ind in range(len(self.min_temp_arr)):
             min_temp = abs(self.min_temp_arr[temp_ind])
             max_temp = abs(self.max_temp_arr[temp_ind])
-            cloudtracks_fp_format = os.path.join(
-                job_output_folder, f"Agg_{self.agg_fact:02}_T_{min_temp:02}_{max_temp:02}", folder_name, "pixel_path_tracking", folder_name, filename_format)
+            if self.do_resampling:
+                cloudtracks_fp_format = os.path.join(
+                    job_output_folder, f"R_Agg_{self.agg_fact:02}_T_{min_temp:02}_{max_temp:02}", folder_name, "pixel_path_tracking", folder_name, filename_format)
+            else:
+                cloudtracks_fp_format = os.path.join(
+                    job_output_folder, f"Agg_{self.agg_fact:02}_T_{min_temp:02}_{max_temp:02}", folder_name, "pixel_path_tracking", folder_name, filename_format)
+
             key = f"{abs(min_temp)}_{abs(max_temp)}"
             cloudtracks_fps[key] = {}
             cloudtracks_fps[key]["cloudtracks"] = np.array(
                 self.gen_filename_list(file_format=cloudtracks_fp_format))
-            stats_fp_format = os.path.join(
-                job_output_folder, f"Agg_{self.agg_fact:02}_T_{min_temp:02}_{max_temp:02}", folder_name, "stats")
+            if self.do_resampling:
+                stats_fp_format = os.path.join(
+                    job_output_folder, f"R_Agg_{self.agg_fact:02}_T_{min_temp:02}_{max_temp:02}", folder_name, "stats")
+            else:
+                stats_fp_format = os.path.join(
+                    job_output_folder, f"Agg_{self.agg_fact:02}_T_{min_temp:02}_{max_temp:02}", folder_name, "stats")
             cloudtracks_fps[key]["trackstats"] = os.path.join(
                 stats_fp_format, f"trackstats_{folder_name}.nc")
             cloudtracks_fps[key]["tracknumbers"] = os.path.join(
@@ -253,5 +275,5 @@ if __name__ == "__main__":
     # searcher.gen_target_filenames()
     # check_existance_of_unpr_files(searcher)
     result_dict = generate_filename_dict(read_config())
-    print(result_dict['filter'])
+    print(result_dict)
     print("Done")

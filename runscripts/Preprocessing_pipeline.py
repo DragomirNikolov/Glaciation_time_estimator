@@ -139,7 +139,7 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
 
     # Generate output file and save result
     resample_res_fps = folder_resample_res_fps[folder_fp_ind]
-    agg_res_fps = folder_agg_res_fps[folder_fp_ind]
+    # agg_res_fps = folder_agg_res_fps[folder_fp_ind]
     print("Saving to ", resample_res_fps)
     output_file.save_file(resample_res_fps)
     # Close dataset
@@ -188,13 +188,13 @@ def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, 
         f"Aggregated day {folder_fp_ind}/{len(folder_resample_res_fps)} in {round(agg_end_time - agg_start_time,2)}s\nStarting with {agg_res_fps[0]}")
 
 
-def filter_folder(day_fp_to_filter, temp_bounds, agg_fact, n_threads=8):
+def filter_folder(day_fp_to_filter, temp_bounds, agg_fact, do_rsampling, n_threads=8):
     sem = threading.Semaphore(n_threads)   # pick a threshold here
     for temp_ind in range(len(temp_bounds[0])):
         min_temp = temp_bounds[0][temp_ind]
         max_temp = temp_bounds[1][temp_ind]
         outpur_fps = generate_filtered_output_fps(
-            day_fp_to_filter, agg_fact, min_temp, max_temp)
+            day_fp_to_filter, agg_fact, min_temp, max_temp, do_resampling)
         Ts = []
         for file_ind, output_fp in enumerate(outpur_fps):
             sem.acquire()
@@ -277,11 +277,15 @@ def prepare_all_files(target_filenames, config):
     print(f"Total resampling + agg time = {round(end_time-start_time,2)}")
 
 
-def generate_filtered_output_fps(day_fp, agg_fact, min_temp, max_temp):
+def generate_filtered_output_fps(day_fp, agg_fact, min_temp, max_temp, do_resampling):
     output_fp = day_fp
     output_fp = np.char.replace(output_fp, "Resampled_Data", "Filtered_Data")
-    output_fp = np.char.replace(
-        output_fp, f"Agg_{agg_fact:02}", f"Agg_{agg_fact:02}_T_{abs(min_temp):02}_{abs(max_temp):02}")
+    if do_resampling:
+        output_fp = np.char.replace(
+            output_fp, f"R_Agg_{agg_fact:02}", f"R_Agg_{agg_fact:02}_T_{abs(min_temp):02}_{abs(max_temp):02}")
+    else:
+        output_fp = np.char.replace(
+            output_fp, f"Agg_{agg_fact:02}", f"Agg_{agg_fact:02}_T_{abs(min_temp):02}_{abs(max_temp):02}")
     os.makedirs(os.path.dirname(output_fp[0]), exist_ok=True)
     return output_fp
 
@@ -293,7 +297,7 @@ def generate_filtered_files(config, target_filenames, t_deltas, agg_fact, n_work
         filter_start_time = time.time()
         pool = Pool(n_workers)
         pool.map(partial(filter_folder, temp_bounds=temp_bounds,
-                 agg_fact=agg_fact, n_threads = config["n_preproc_threads"]), fps_by_folder(target_filenames[pole]["filter"]))
+                 agg_fact=agg_fact,do_resampling=config["Resampling"], n_threads = config["n_preproc_threads"]), fps_by_folder(target_filenames[pole]["filter"]))
         pool.close()
         pool.join()
         filter_end_time = time.time()

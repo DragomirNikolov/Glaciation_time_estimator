@@ -5,7 +5,7 @@ import os
 
 
 class ChunkLoader:
-    def __init__(self, years, config=None, config_fp=None ,load_init_chunk=True):
+    def __init__(self, years, config=None, config_fp=None ,load_init_chunk=True, filter=True):
         self.years = years
         if config is None:
             self.config = read_config(config_fp)
@@ -24,7 +24,7 @@ class ChunkLoader:
             for year in years
         }
         self.loaded_key = None
-        
+        self.filter=filter
         # initial load using full columns
         if load_init_chunk==True:
             self.load_single_chunk(years[0])
@@ -65,8 +65,9 @@ class ChunkLoader:
                     self.cloud_chunk["month"] = pd.to_datetime(
                         self.cloud_chunk['track_start_time']
                     ).dt.month
-            self.cloud_chunk=self.cloud_chunk[~self.cloud_chunk.is_large_pix_cloud]
-            self.cloud_chunk = self.cloud_chunk[(self.cloud_chunk.avg_lat >30) | (self.cloud_chunk.avg_lat<-30)]
+            if self.filter:
+                self.cloud_chunk=self.cloud_chunk[~self.cloud_chunk.is_large_pix_cloud]
+                self.cloud_chunk = self.cloud_chunk[(self.cloud_chunk.avg_lat >30) | (self.cloud_chunk.avg_lat<-30)]
         else:
             self.cloud_chunk = pd.DataFrame()
 
@@ -82,8 +83,9 @@ class ChunkLoader:
                 self.glac_chunk = pd.read_parquet(
                     self.glac_fps[key], columns=list(columns_to_load).extend(['Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon'])
                 )
-            self.glac_chunk=self.glac_chunk[~self.glac_chunk.is_large_pix_cloud]
-            self.glac_chunk = self.glac_chunk[(self.glac_chunk.avg_lat >30) | (self.glac_chunk.avg_lat<-30)]
+            if self.filter:
+                self.glac_chunk=self.glac_chunk[~self.glac_chunk.is_large_pix_cloud]
+                self.glac_chunk = self.glac_chunk[(self.glac_chunk.avg_lat >30) | (self.glac_chunk.avg_lat<-30)]
             # Drop duplicate Cloud_IDs and mark glaciating
             self.glac_cloud_chunk = self.glac_chunk.drop_duplicates(
                 subset="Cloud_ID", keep="first"
