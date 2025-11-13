@@ -1,9 +1,15 @@
 import numpy as np
 import xarray as xr
 import pyproj
-from pyresample.geometry import SwathDefinition
 import pyresample.kd_tree as kd_tree
+from pyresample.geometry import SwathDefinition
+from pyresample.bilinear import XArrayBilinearResampler
+from pyresample.ewa import DaskEWAResampler
 from pyresample import get_area_def
+
+
+import os
+from tempfile import gettempdir
 
 class ProjectionTransformer():
     def __init__(self):
@@ -11,6 +17,8 @@ class ProjectionTransformer():
         self.SwathDef = None
         self._neighbor_info = None
         self._neighbor_params = None  # (radius, epsilon, neighbours)
+        self._bil_info = False
+        self.ewa_resampler = None
 
     def generate_lat_lon_prj(self, aux_data):
         lon_mat = aux_data["lon"][0, :, :].values
@@ -85,18 +93,46 @@ class ProjectionTransformer():
 
     # -------------------------------------------------------------------------
 
-    def remap_data(self, var_field, n_resample_procs=8,
-                   radius_of_influence=60000, epsilon=5):
-        if self.SwathDef is None:
-            raise RuntimeError(
-                "No projection parameters. Run generate_lat_lon_prj(...) first."
-            )
+    def build_bilinear_cache(self, path, radius_of_influence=60000, epsilon=5,neighbours=1):
+        if self.SwathDef is None or self.AreaDef is None:
+            raise RuntimeError("Call generate_lat_lon_prj(...) before caching bilinear neibbours.")
+        resampler = XArrayBilinearResampler(self.SwathDef, self.AreaDef, radius_of_influence=radius_of_influence, epsilon=epsilon, neighbours=neighbours)
+        resampler.save_resampling_info(path)
+        self._neighbor_params == (radius_of_influence, epsilon, neighbours)
+        self._bil_info=True
+       
+    
+    def load_bilinear_cache(self,path,radius_of_influence=60000,epsilon=5,neighbours=1):
+        self.bil_resampler = XArrayBilinearResampler(self.SwathDef, self.AreaDef, radius_of_influence=radius_of_influence,epsilon=epsilon,neighbours=neighbours)
+        self.bil_resampler.load_resampling_info(path)
 
-        if len(var_field.shape) != 3:
-            raise NotImplementedError("2D var field remapping not yet added")
+    def bilinear_remap(self,var_tyx, n_resample_procs=8, radius_of_influence=30000, epsilon=1000, neighbours=1):
+        # If we have a matching neighbor cache, use it; else fall back
+        use_cache = (
+            self._bil_info and
+            self._neighbor_params == (radius_of_influence, epsilon, neighbours)
+        )
 
-        # Data as (y, x, time)
-        var_tyx = var_field.transpose("y", "x", "time").load()  # keeps files open until read completes
+        if use_cache:
+            print("Using precomputed neighbor cache for remapping.")
+            out = self.bil_resampler.resample(var_tyx, fill_value=-1, nprocs=n_resample_procs)
+            
+        else:
+            resampler = XArrayBilinearResampler(self.SwathDef, self.AreaDef, radius_of_influence=radius_of_influence,epsilon=1000, reduce_data=True)
+            out = resampler.resample(var_tyx, fill_value=-1, nprocs=n_resample_procs)
+            # Compute neighbors on the fly (slower) or pre-build via build_neighbor_cache()
+            
+
+        # Back to (time, y, x) and keep your original flip on Y
+        # out = out.transpose(2, 0, 1)
+        # out = np.flip(out, axis=1)
+        # out[np.isnan(out)] = -1
+        return out
+    
+
+# cache_file = os.path.join(gettempdir(), "bilinear_resampling_luts.zarr")
+    def nn_remap(self,var_tyx, n_resample_procs=8,
+                 radius_of_influence=60000, epsilon=5):
         data = var_tyx.values  # numpy array now
         # data = var_field.transpose("y", "x", "time").values
         nt = data.shape[2]
@@ -131,4 +167,38 @@ class ProjectionTransformer():
         out = np.flip(out, axis=1)
         out[np.isnan(out)] = -1
         return out
+    
+    def build_ewa_resampler(self):
+        self.ewa_resampler = DaskEWAResampler(self.SwathDef, self.AreaDef)
+
+    def ewa_remap(self,var_tyx,rows_per_scan=None):
+        if self.ewa_resampler is None:
+            self.build_ewa_resampler()
+        out = self.ewa_resampler.resample(var_tyx.values[:,:,0],rows_per_scan=3133,fill_value=-1)
+        # out = out.transpose(2, 0, 1)
+        out = np.flip(out, axis=0)
+        out[np.isnan(out)] = -1
+        return out
+
+
+    def remap_data(self, var_field, n_resample_procs=8, radius_of_influence=60000, epsilon=5, method=None):
+        if self.SwathDef is None:
+            raise RuntimeError(
+                "No projection parameters. Run generate_lat_lon_prj(...) first."
+            )
+
+        if len(var_field.shape) != 3:
+            raise NotImplementedError("2D var field remapping not yet added")
+
+        # Data as (y, x, time)
+        var_tyx = var_field.transpose("y", "x", "time").load()  # keeps files open until read completes
+        if method == 'nn':
+            return self.nn_remap(var_tyx, n_resample_procs,
+                                radius_of_influence=radius_of_influence, epsilon=epsilon)
+        elif method == 'ewa':
+            return self.ewa_remap(var_tyx)
+        elif method == 'bilinear':
+            return self.bilinear_remap(var_tyx, n_resample_procs=n_resample_procs,radius_of_influence=radius_of_influence, epsilon=epsilon)
+        else:
+            raise NotImplementedError(f"Remapping method '{method}' not implemented.")
     

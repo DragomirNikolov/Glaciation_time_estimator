@@ -34,9 +34,9 @@ for dt in 6; do
         max_temp=$((min_temp - dt))
         for pole in "np" "sp"; do
             if [ -z "$YEAR" ]; then
-                name=T_"$min_temp"_"$max_temp"_"$agg_fact"_"$pole"_"${config_name::-5}"
+                name=T_"$min_temp"_"$max_temp"_"$pole"_"${config_name::-5}"
             else
-                name=T_"$min_temp"_"$max_temp"_"$agg_fact"_"$pole"_"${config_name::-5}"_"$YEAR"
+                name=T_"$min_temp"_"$max_temp"_"$pole"_"${config_name::-5}"_"$YEAR"
             fi
             if [ -z "$init_dependency" ]; then
                 if [ -z "$wait_time" ]; then

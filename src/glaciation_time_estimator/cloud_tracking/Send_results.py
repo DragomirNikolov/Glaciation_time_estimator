@@ -37,8 +37,13 @@ def send_results(config):
     # print(time_folder)
     min_temp = cmd_args["temp_bounds"][0]
     max_temp = cmd_args["temp_bounds"][1]
-    output_dir = os.path.join(
-        config['job_output_fp'], cmd_args["pole"], f"Agg_{config['agg_fact']:02}_T_{abs(min_temp):02}_{abs(max_temp):02}", time_folder)
+    if config["Resample"]:
+        output_dir = os.path.join(
+            config['job_output_fp'], cmd_args["pole"], f"R_Agg_{config['agg_fact']:02}_T_{abs(min_temp):02}_{abs(max_temp):02}", time_folder)
+    else:
+        output_dir = os.path.join(
+            config['job_output_fp'], cmd_args["pole"], f"Agg_{config['agg_fact']:02}_T_{abs(min_temp):02}_{abs(max_temp):02}", time_folder)
+ 
     os.makedirs(output_dir, exist_ok=True)
     subprocess.run(
         ["rsync", "-auq", cmd_args["results_dir"], output_dir])

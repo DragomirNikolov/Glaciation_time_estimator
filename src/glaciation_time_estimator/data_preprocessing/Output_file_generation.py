@@ -105,10 +105,49 @@ class OutputFile:
                 "flag_meanings": "clear liquid ice",
                 # <<< make these numeric shorts, not strings
                 "flag_values": np.array([0, 1, 2], dtype=np.int16),
+                # <<< make these numeric shorts, not strings
+                "flag_values": np.array([0, 1, 2], dtype=np.int16),
                 "missing_value": np.int16(-1),
                 "units": "1",
                 "long_name": "Cloud Thermodynamic Phase",
                 "standard_name": "thermodynamic_phase_of_cloud_water_particles_at_cloud_top",
+                "coordinates": "lon lat",
+            },
+        )
+
+    # def set_ctx_output_variables(self, resampled_ctt_data, resampled_cth_data):
+    #     self.cph_ds["ctt_resampled"] = xr.DataArray(
+    #         resampled_ctt_data.astype(np.float32),
+    #         dims=("time", "lat", "lon"),
+    #         attrs={
+    #             # "_FillValue": np.float32(-1),
+    #             "units": "K",
+    #             "valid_range": [np.float32(0), np.float32(4060)],
+    #             "standard_name": "air_temperature_at_cloud_top",
+    #             "long_name": "Cloud Top Temperature",
+    #             # "grid_mapping": "projection",
+    #             'coordinates': 'lon lat',
+    #             "cell_methods": "time: point",
+    #             "add_offset": np.float32(0.0),
+    #             # "scale_factor": np.float32(0.1)
+    #         }
+    #     )
+    #     self.cph_ds["cth_resampled"] = xr.DataArray(
+    #         resampled_cth_data.astype(np.float32),
+    #         dims=("time", "lat", "lon"),
+    #         attrs={
+    #             # "_FillValue": np.float32(-1),
+    #             "units": "m",
+    #             "valid_range": [np.float32(0), np.float32(30000)],
+    #             "standard_name": "cloud_top_altitude",
+    #             "long_name": "Cloud Top Height",
+    #             # "grid_mapping": "projection",
+    #             'coordinates': 'lon lat',
+    #             "cell_methods": "time: point",
+    #             "add_offset": np.float32(0.0),
+    #             "scale_factor": np.float32(1.0)
+    #         }
+    #     )
                 "coordinates": "lon lat",
             },
         )
@@ -181,6 +220,8 @@ class OutputFile:
                 "cell_methods": "time: point",
                 "coordinates": "lon lat",
             },
+                "coordinates": "lon lat",
+            },
         )
 
 
@@ -249,7 +290,14 @@ class OutputResampledFile(OutputFile):
         })
 
 
-        # strip any conflicting attrs
+        # time variable CF attrs (and we'll also control units via encoding)
+        self.cph_ds["time"].attrs.update({
+            "standard_name": "time",
+            "long_name": "time",
+            "axis": "T",
+        })
+
+        # strip conflicting attrs
         self.cph_ds = self._strip_encoding_attrs(self.cph_ds)
         ny, nx = int(self.cph_ds.sizes["lat"]), int(self.cph_ds.sizes["lon"])
         enc = self._default_encoding((1, ny, nx))

@@ -71,7 +71,10 @@ def config_setup(work_dir: str, base_setup_content: list, arg_dict: dict, config
 
     # Update config file parameters
     temp_setup['root_path'] = root_path
-    temp_setup["databasename"] = f"Agg_{round(agg_fact):02}_T_{round(abs(min_temp)):02}_{round(abs(max_temp)):02}_"
+    if config["Resample"]:
+        temp_setup["databasename"] = f"R_Agg_{round(agg_fact):02}_T_{round(abs(min_temp)):02}_{round(abs(max_temp)):02}_"
+    else:
+        temp_setup["databasename"] = f"Agg_{round(agg_fact):02}_T_{round(abs(min_temp)):02}_{round(abs(max_temp)):02}_"
     temp_setup["clouddata_path"] = os.path.join(work_dir, "Data","")
     temp_setup['logger_filepath'] = os.path.join(root_path, 'log.log')
     temp_setup['error_filepath'] = os.path.join(root_path, 'err.log')

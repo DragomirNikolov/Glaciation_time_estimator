@@ -25,10 +25,14 @@ def parse_cmd_args():
 def generate_remote_fps(config, cmd_args):
     target_dict = generate_filename_dict(config, exclude_existing=False)
     # Replace filename parts to include temperature bounds.
+    if config["Resample"]:
+        agg_tag = f"R_Agg_{config['agg_fact']:02}"
+    else:
+        agg_tag = f"Agg_{config['agg_fact']:02}"
     target_fps = np.char.replace(
         target_dict[cmd_args["pole"]]["filter"],
-        f"Agg_{config['agg_fact']:02}_",
-        f"Agg_{config['agg_fact']:02}_T_{abs(cmd_args['temp_bounds'][0]):02}_{abs(cmd_args['temp_bounds'][1]):02}_"
+        f"{agg_tag}_{config['agg_fact']:02}_",
+        f"{agg_tag}_T_{abs(cmd_args['temp_bounds'][0]):02}_{abs(cmd_args['temp_bounds'][1]):02}_"
     )
     # print(target_dict[cmd_args["pole"]]["filter"])
     # print(config["CLAAS_fp"])

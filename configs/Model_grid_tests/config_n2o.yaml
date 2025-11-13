@@ -3,8 +3,10 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20090501_0000"
-end_time: "20090502_0000"
+# start_time: "20090501_0000"
+# end_time: "20090502_0000"
+start_time: "20090101_0000"
+end_time: "20090101_0200"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
@@ -52,8 +54,8 @@ aux_fps_agg:
 #Location of the files used for the temporary grid when resampling is turned off
 grid_fps:
   {
-    "np": "/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid_np.txt",
-    "sp": "/wolke_scratch/dnikolo/Glaciation_time_estimator/Data_preprocessing/grid_sp.txt"
+    "np": "/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/grid_np.txt",
+    "sp": "/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/grid_sp.txt"
   }
 
 # File path of the CLAAS dataset that contains the pole(hemisphere) folders

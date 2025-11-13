@@ -251,11 +251,19 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
             ]
 
     # Ensure output directory exists
-    output_dir = os.path.join(
-        config['postprocessing_output_dir'], pole,
-        config['time_folder_name'],
-        f"Agg_{config['agg_fact']:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}"
-    )
+    if config["Resample"]:
+        output_dir = os.path.join(
+            config['postprocessing_output_dir'], pole,
+            config['time_folder_name'],
+            f"R_Agg_{config['agg_fact']:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}"
+        )
+    else:
+        output_dir = os.path.join(
+            config['postprocessing_output_dir'], pole,
+            config['time_folder_name'],
+            f"Agg_{config['agg_fact']:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}"
+        )
+
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
 
     # Save DataFrame to Parquet
