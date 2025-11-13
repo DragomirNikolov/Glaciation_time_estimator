@@ -123,9 +123,9 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
 
     # Resample cpx dataset contents
     resampled_ctt_data = transformer.remap_data(
-        input_ctx_ds["ctt"])
+        input_ctx_ds["ctt"],method='nn')
     resampled_cth_data = transformer.remap_data(
-        input_ctx_ds["cth"])
+        input_ctx_ds["cth"],method='nn')
     output_file.set_ctx_output_variables(
         resampled_ctt_data, resampled_cth_data)
     # del resampled_ctt_data, resampled_cth_data
@@ -133,7 +133,7 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
 
     # Resample cpp dataset contents
     resampled_cph_data = transformer.remap_data(
-        input_cpp_ds["cph"])
+        input_cpp_ds["cph"],method='nn')
     output_file.set_cpp_output_variables(
         resampled_cph_data)
 
@@ -188,7 +188,7 @@ def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, 
         f"Aggregated day {folder_fp_ind}/{len(folder_resample_res_fps)} in {round(agg_end_time - agg_start_time,2)}s\nStarting with {agg_res_fps[0]}")
 
 
-def filter_folder(day_fp_to_filter, temp_bounds, agg_fact, do_rsampling, n_threads=8):
+def filter_folder(day_fp_to_filter, temp_bounds, agg_fact, do_resampling, n_threads=8):
     sem = threading.Semaphore(n_threads)   # pick a threshold here
     for temp_ind in range(len(temp_bounds[0])):
         min_temp = temp_bounds[0][temp_ind]
@@ -297,7 +297,7 @@ def generate_filtered_files(config, target_filenames, t_deltas, agg_fact, n_work
         filter_start_time = time.time()
         pool = Pool(n_workers)
         pool.map(partial(filter_folder, temp_bounds=temp_bounds,
-                 agg_fact=agg_fact,do_resampling=config["Resampling"], n_threads = config["n_preproc_threads"]), fps_by_folder(target_filenames[pole]["filter"]))
+                 agg_fact=agg_fact,do_resampling=config["Resample"], n_threads = config["n_preproc_threads"]), fps_by_folder(target_filenames[pole]["filter"]))
         pool.close()
         pool.join()
         filter_end_time = time.time()

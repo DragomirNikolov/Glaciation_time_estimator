@@ -25,7 +25,7 @@ def parse_cmd_args():
 def generate_remote_fps(config, cmd_args):
     target_dict = generate_filename_dict(config, exclude_existing=False)
     # Replace filename parts to include temperature bounds.
-    if config["Resampling"]:
+    if config["Resample"]:
         agg_tag = f"R_Agg_{config['agg_fact']:02}"
     else:
         agg_tag = f"Agg_{config['agg_fact']:02}"

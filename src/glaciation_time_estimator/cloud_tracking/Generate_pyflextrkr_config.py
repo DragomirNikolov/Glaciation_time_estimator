@@ -71,7 +71,7 @@ def config_setup(work_dir: str, base_setup_contnet: list, arg_dict: dict, config
 
     # Update config file parameters
     temp_setup['root_path'] = root_path
-    if config["Resampling"]:
+    if config["Resample"]:
         temp_setup["databasename"] = f"R_Agg_{round(agg_fact):02}_T_{round(abs(min_temp)):02}_{round(abs(max_temp)):02}_"
     else:
         temp_setup["databasename"] = f"Agg_{round(agg_fact):02}_T_{round(abs(min_temp)):02}_{round(abs(max_temp)):02}_"

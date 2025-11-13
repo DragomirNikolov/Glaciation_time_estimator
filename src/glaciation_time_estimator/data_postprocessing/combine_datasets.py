@@ -17,7 +17,7 @@ def get_glaciations_df(config):
     agg_fact = config['agg_fact']
     folder_name = f"{config['start_time'].strftime(config['time_folder_format'])}_{config['end_time'].strftime(config['time_folder_format'])}"
     pole=config["pole_folders"][0]
-    if config["Resampling"]:
+    if config["Resample"]:
         fp = os.path.join(
                     config['postprocessing_output_dir'],
                     pole,
@@ -54,7 +54,7 @@ def get_combined_cloud_df(config):
         # Iterate over each pole
         for pole in config["pole_folders"]:
             # Construct the file path
-            if config["Resampling"]:
+            if config["Resample"]:
                 fp = os.path.join(
                     config['postprocessing_output_dir'],
                     pole,

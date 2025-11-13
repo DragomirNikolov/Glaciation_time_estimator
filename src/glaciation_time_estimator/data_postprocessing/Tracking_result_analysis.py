@@ -251,7 +251,7 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
             ]
 
     # Ensure output directory exists
-    if config["Resampling"]:
+    if config["Resample"]:
         output_dir = os.path.join(
             config['postprocessing_output_dir'], pole,
             config['time_folder_name'],
