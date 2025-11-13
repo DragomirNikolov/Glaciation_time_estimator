@@ -205,9 +205,12 @@ def get_combined_cloud_df(config):
             cloud_properties_df_list[i].append(df)
 
     # Combine all dataframes into a single dataframe
-    return pd.concat(
-        [df for sublist in cloud_properties_df_list for df in sublist], ignore_index=True)
-
+    cloud_df = pd.concat([df for sublist in cloud_properties_df_list for df in sublist], ignore_index=True)
+    #Save the combined dataframe
+    cloud_df_path = os.path.join(config['postprocessing_output_dir'],"Results",f"Agg_{config['agg_fact']:02}_clouds_{folder_name}.parquet")
+    os.makedirs(os.path.dirname(cloud_df_path), exist_ok=True)
+    cloud_df.to_parquet(cloud_df_path)
+    return cloud_df
 
 def extract_glaciation_events(df, glac_tresh=0.4):
     if (df["max_ice_fraction"]-(1-df["max_water_frac"]) <= glac_tresh).all():
@@ -238,7 +241,7 @@ def save_glac_df(glaciations_df, config):
         output_dir = os.path.join(
             config['postprocessing_output_dir'], pole,
             config['time_folder_name'],
-            f"Agg_{config['agg_fact']:02}_Glaciations"
+            f"Agg_{config['agg_fact']:02}_glaciations"
         )
         # Save DataFrame to Parquet
         output_dir_parq = output_dir + ".parquet"
@@ -263,7 +266,7 @@ def extract_glaciations_single_period(config):
     print("Generating glaciations dataframe")
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
     folder_name = f"{config['start_time'].strftime(config['time_folder_format'])}_{config['end_time'].strftime(config['time_folder_format'])}"
-    glac_df_path = os.path.join(config['postprocessing_output_dir'],"Results",f"Agg_{config['agg_fact']:02}_Glaciations_{folder_name}.parquet")
+    glac_df_path = os.path.join(config['postprocessing_output_dir'],"Results",f"Agg_{config['agg_fact']:02}_glaciations_{folder_name}.parquet")
     os.makedirs(os.path.dirname(glac_df_path), exist_ok=True)
     print(f"Writing glaciations to parquet: {glac_df_path}")
     glaciations_df.to_parquet(glac_df_path)

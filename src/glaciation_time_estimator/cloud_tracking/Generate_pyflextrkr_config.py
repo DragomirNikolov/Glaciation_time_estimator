@@ -42,7 +42,7 @@ def parse_cmd_args():
     return args_dict
 
 
-def config_setup(work_dir: str, base_setup_contnet: list, arg_dict: dict, config: dict) -> str:
+def config_setup(work_dir: str, base_setup_content: list, arg_dict: dict, config: dict) -> str:
     """
     Writes configuratuin file
 
@@ -60,7 +60,7 @@ def config_setup(work_dir: str, base_setup_contnet: list, arg_dict: dict, config
     start_time = config['start_time']
     end_time = config['end_time']
     agg_fact = config['agg_fact']
-    temp_setup = base_setup_contnet
+    temp_setup = base_setup_content
 
     # Create root path
     root_path = os.path.join(work_dir, "Result", "")

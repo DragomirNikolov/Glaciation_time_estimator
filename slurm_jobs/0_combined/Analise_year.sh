@@ -28,7 +28,8 @@ postproc_job_ids=()
 for MONTH in {01..12}; do
     for part in 01 02; do
         # Set name of configuration file
-        CONFIG_FILE="${GTE_DIR}/configs/${YEAR}_tracking/${MONTH}_${part}.yaml"
+        
+        CONFIG_FILE="${GTE_DIR}/configs/Model_grid_tests/${YEAR}_tracking/${MONTH}_${part}.yaml"
         # Run preprocessing job for the current part of month
         if [ -z "$wait_time" ]; then
             preproc_id=$(sbatch --parsable -J "${YEAR}_${MONTH}_${part}_preproc" "${GTE_DIR}slurm_jobs/1_preprocessing/preproc_job.bsub" -c $CONFIG_FILE)

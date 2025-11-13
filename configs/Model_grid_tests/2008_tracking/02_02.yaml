@@ -3,13 +3,13 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20090402_0000"
-end_time: "20090402_0400"
+start_time: "20080215_0000"
+end_time: "20080301_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
 #Is this file used to set up an analysis of a whole year of data
-Analyze_year: False
+Analyze_year: True
 # In how many parts are the months in this year split
 n_month_parts: 2
 # The folder which contains the following structure:
@@ -23,7 +23,7 @@ n_month_parts: 2
 #      02_<n_month_parts>.yaml
 #      ...
 #      12_<n_month_parts>.yaml
-yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs"
+yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Model_grid_tests"
 
 ########################
 # Data structure and location

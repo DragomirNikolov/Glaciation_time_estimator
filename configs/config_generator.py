@@ -10,6 +10,10 @@ python /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/confi
     /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/2007_tracking/01_01.yaml \
     /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs
 
+python /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/config_generator.py 2008 \
+    /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Model_grid_tests/short_test.yaml \
+    /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Model_grid_tests
+
 /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/April_testing/euler_template.yaml \
 """
 import argparse
@@ -45,29 +49,32 @@ def main(year: int, template_path: str, output_root: str) -> None:
         if month== 1:
             s1 = datetime(year, month, 1, 0, 0)
         else:
-            s1 = datetime(year, month, 1, 0, 15)
+            s1 = datetime(year, month, 1, 0, 0)
         e1 = datetime(year, month, 15, 0, 0)
         txt1 = replace_times(template, s1.strftime(TIME_FMT), e1.strftime(TIME_FMT))
         with open(os.path.join(out_dir, f"{month:02d}_01.yaml"), "w") as f:
             f.write(txt1)
 
-         # -------- segment 2: 15th 00:15  -->  15th 15:00 --------
-        s2 = datetime(year, month, 15, 0, 15)
-        e2 = datetime(year, month, 15, 15, 0)
+         # -------- segment 2: 15th 00:00  -->  15th 15:00 --------
+        s2 = datetime(year, month, 15, 0, 0)
+        if month == 12:
+            e2 = datetime(year, 12, 31, 23, 45)
+        else:
+            e2 = datetime(year, month + 1, 1, 0, 0)
         txt2 = replace_times(template, s2.strftime(TIME_FMT), e2.strftime(TIME_FMT))
         with open(os.path.join(out_dir, f"{month:02d}_02.yaml"), "w") as f:
             f.write(txt2)
 
-        # The two sections overlap in one timestep so that the corresponding clouds can be joined
-        # -------- segment 3: 15th 15:00  -->  1st of next month 00:00 --------
-        s3 = datetime(year, month, 15, 15, 0)
-        if month == 12:
-            e3 = datetime(year, 12, 31, 23, 45)
-        else:
-            e3 = datetime(year, month + 1, 1, 0, 0)
-        txt3 = replace_times(template, s3.strftime(TIME_FMT), e3.strftime(TIME_FMT))
-        with open(os.path.join(out_dir, f"{month:02d}_03.yaml"), "w") as f:
-            f.write(txt3)
+        # # The two sections overlap in one timestep so that the corresponding clouds can be joined
+        # # -------- segment 3: 15th 15:00  -->  1st of next month 00:00 --------
+        # s3 = datetime(year, month, 15, 15, 0)
+        # if month == 12:
+        #     e3 = datetime(year, 12, 31, 23, 45)
+        # else:
+        #     e3 = datetime(year, month + 1, 1, 0, 0)
+        # txt3 = replace_times(template, s3.strftime(TIME_FMT), e3.strftime(TIME_FMT))
+        # with open(os.path.join(out_dir, f"{month:02d}_03.yaml"), "w") as f:
+        #     f.write(txt3)
         
        
 

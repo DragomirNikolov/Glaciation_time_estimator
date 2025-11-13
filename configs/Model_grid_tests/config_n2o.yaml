@@ -45,7 +45,7 @@ aux_fps:
 
 aux_fps_agg:
   {
-    "np": "/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
+    "np": "/wolke_scratch/dnikolo/processed_daily/np/aggreagated_aux_file.nc",
     "sp": "/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
   }  
 

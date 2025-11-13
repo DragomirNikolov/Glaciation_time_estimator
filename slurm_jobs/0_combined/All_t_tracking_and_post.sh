@@ -1,11 +1,12 @@
 #!/bin/bash
 
-while getopts 'c:d:y:w:' flag; do
+while getopts 'c:d:y:w:a:' flag; do
     case "${flag}" in
     c) GTE_CONFIG_DIR=${OPTARG};;
     d) init_dependency=${OPTARG};;
     y) YEAR=${OPTARG};;
     w) wait_time=${OPTARG};;
+    a) agg_fact=${OPTARG};;
     *)
         print_usage
         exit 1
@@ -19,7 +20,11 @@ if [ -z "$GTE_CONFIG_DIR" ]; then
     exit 1
 fi
 
-agg_fact=3
+# Check if GTE_CONFIG_DIR is empty
+if [ -z "$agg_fact" ]; then
+    agg_fact=20
+    echo "Assuming default value 20 for aggregation factor."
+fi
 job_ids=()
 config_name="${GTE_CONFIG_DIR##*/}"
 # for dt in 3 5 6; do
