@@ -148,9 +148,9 @@ class OutputFile:
     #             "scale_factor": np.float32(1.0)
     #         }
     #     )
-                "coordinates": "lon lat",
-            },
-        )
+        #         "coordinates": "lon lat",
+        #     },
+        # )
 
     # def set_ctx_output_variables(self, resampled_ctt_data, resampled_cth_data):
     #     self.cph_ds["ctt_resampled"] = xr.DataArray(
@@ -219,9 +219,7 @@ class OutputFile:
                 "long_name": "Cloud Top Height",
                 "cell_methods": "time: point",
                 "coordinates": "lon lat",
-            },
-                "coordinates": "lon lat",
-            },
+            }
         )
 
 
