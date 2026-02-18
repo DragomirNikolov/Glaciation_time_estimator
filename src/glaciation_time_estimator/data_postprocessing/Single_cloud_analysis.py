@@ -10,6 +10,7 @@ class Cloud:
     # def __new__(self, *args, **kwargs):
     #     return super().__new__(self)
     def __init__(self, cloud_id, is_resampled):
+        # Set initial parameters
         self.id = cloud_id # tracknumber
         self.is_resampled = is_resampled # whether we are analyzing output directly from CLAAS or after resampling
         self.crit_fraction = 0.1 # For simplified analysis. Critical IF below which the cloud is considered liquid. Above 1-crit_fraction the cloud is considered ice. In the medium range the cloud is considered mixed.
@@ -106,54 +107,102 @@ class Cloud:
         variance = np.average((values-average)**2, weights=weights)
         return (average, math.sqrt(variance))
 
-    def check_status_inputs(self, cloud_values,pixel_area, pixel_area_agg):
-        assert (~np.isnan(pixel_area).any()), "NaN values in pixel area array after filtering"
+    def check_status_inputs(self, cloud_values,pixel_area_non_agg, pixel_area_agg):
+        """
+        Do checks on the validity of some inputs.
+        """
+        assert (~np.isnan(pixel_area_non_agg).any()), "NaN values in pixel area array after filtering"
         assert (~np.isnan(pixel_area_agg).any()).any(), "NaN values in pixel area array after filtering"
         assert (pixel_area_agg > 0).all(), f"0 or negative values in aggregated pixel area array {pixel_area_agg}"
-        assert (len(pixel_area_agg) == len(cloud_values)), f"Length of pixel area array ({len(pixel_area)}) does not match length of cloud values array ({len(cloud_values)})"
+        assert (len(pixel_area_agg) == len(cloud_values)), f"Length of pixel area array ({len(pixel_area_non_agg)}) does not match length of cloud values array ({len(cloud_values)})"
 
-    def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area, agg_pixel_area):
-        ind_to_take = ~np.isnan(pixel_area)
-        pixel_area = pixel_area[ind_to_take]
-               
-        if sum(pixel_area) == 0 or len(pixel_area)==0:
-            error_message = f"""All pixel areas are zero or pixel area size is 0:\n
-            Cloud_properties:
+    def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg, pixel_area_agg):
+        """
+        Main function of the class. This is executed each timestep the cloud is present.
+        Data about the cloud top pixels is passed and the cloud properties and time series are updated.
+        It is important that this function is called sequentially
+
+        Inputs:
+        --------
+        time: datetime
+            The time of the current timestep
+        cloud_values: np.array
+            1d Array of cloud phase values for the cloud top pixels
+        cot_values: np.array
+            Array of cloud optical thickness values for the cloud top pixels
+        ctp_values: np.array
+            Array of cloud top pressure values for the cloud top pixels
+        cloud_lat: np.array 
+            Array of latitudes for the cloud top pixels
+        cloud_lon: np.array
+            Array of longitudes for the cloud top pixels
+        pixel_area_non_agg: np.array
+            Array of pixel areas for the cloud top pixels (non-aggregated)
+        pixel_area_agg: np.array
+            Array of pixel areas for the cloud top pixels (aggregated)
+        
+        All the arrays must be the same length with corresponding values at the same indices.
+        
+        Outputs:
+           None
+        """
+
+
+        ## Aggregated pixels may cover NaN (e.g. outside the globe) in the original resolution.
+        ## We filter those using ind_to_take
+        ind_to_take = ~np.isnan(pixel_area_non_agg)
+        pixel_area_non_agg = pixel_area_non_agg[ind_to_take]
+        
+            
+        if sum(pixel_area_non_agg) == 0 or len(pixel_area_non_agg)==0:
+            message = f"""
+            Cloud_properties:\n
             ID: {self.id}\n
             Time: {time}\n
             Max_size_km: {self.max_size_km}\n
             Valid_cot_cloud: {self.valid_cot_cloud}\n
             Valid_ctp_cloud: {self.valid_ctp_cloud}\n
-            Pixel_area: {pixel_area}\n
+            pixel_area_non_agg: {pixel_area_non_agg}\n
             Ind to take: {ind_to_take}\n
             Cloud_values: {cloud_values}\n
             Cot_values: {cot_values}\n
             Ctp_values: {ctp_values}\n
             Cloud_lat: {cloud_lat}\n
             Cloud_lon: {cloud_lon}
-            """
-            raise ValueError(error_message)
+            """ 
+            raise ValueError("All pixel areas are zero or pixel area size is 0:\n"+message)
+        # print(message)
+
         cot_values = cot_values[ind_to_take] if cot_values.size !=0 else None
         ctp_values = ctp_values[ind_to_take] if ctp_values.size !=0 else None
         ctt_values = ctt_values[ind_to_take] if ctt_values.size !=0 else None
         cloud_lat = cloud_lat[ind_to_take]
         cloud_lon = cloud_lon[ind_to_take]
         cloud_size_px = cloud_values.shape[0]
+
+        # We calculated weighted average position of the cloud in latitude and longitude
         if not self.is_resampled:
-            cloud_lat = np.average(cloud_lat, weights=pixel_area)
-            cloud_lon = np.average(cloud_lon, weights=pixel_area)
+            cloud_lat = np.average(cloud_lat, weights=pixel_area_non_agg)
+            cloud_lon = np.average(cloud_lon, weights=pixel_area_non_agg)
             # cloud_lat = 10
             # cloud_lon = 10
         else:
-            cloud_lat = np.average(cloud_lat, weights=pixel_area)
-            cloud_lon = np.average(cloud_lon, weights=pixel_area)
+            cloud_lat = np.average(cloud_lat, weights=pixel_area_non_agg)
+            cloud_lon = np.average(cloud_lon, weights=pixel_area_non_agg)
         # print(cloud_values)
+
+        
         if cloud_size_px:
             self.n_timesteps_no_cloud = 0
-            valid_values = cloud_values[cloud_values >= 1] - 1
-            agg_area_weights = agg_pixel_area[cloud_values >= 1]
+            valid_values = cloud_values[cloud_values >= 1-1e3] - 1
+            agg_area_weights = pixel_area_agg[cloud_values >= 1-1e3]
             # print(len(valid_values)/len(cloud_values))
-            ice_fraction = np.average(valid_values, weights=agg_area_weights)
+            print("Agg_area_weights:", agg_area_weights)
+            try:
+                ice_fraction = np.average(valid_values, weights=agg_area_weights)
+            except Exception as e:
+                message_2 = f"agg_area_weights: {agg_area_weights}\n valid_values: {valid_values}\n cloud_values: {cloud_values}\n pixel_area_non_agg: {pixel_area_non_agg}\n pixel_area_agg: {pixel_area_agg}"
+                raise ValueError("Error calculating ice fraction with message:\n" + message + message_2 + e)
             # print(valid_values)
             # ice_fraction=float(np.count_nonzero(cloud_values==2))/float(cloud_size_px)
             water_fraction = 1-ice_fraction
@@ -176,13 +225,13 @@ class Cloud:
             else:
                 self.is_ice = True
             # if self.is_resampled:
-            #     cloud_size_km = sum(pixel_area*cloud_size_px * \
+            #     cloud_size_km = sum(pixel_area_non_agg*cloud_size_px * \
             #         np.cos(np.deg2rad(cloud_lat))*111.321*111.111)
             # else:
-            cloud_size_km = pixel_area.sum()
+            cloud_size_km = pixel_area_non_agg.sum()
             large_pixel_frac = np.count_nonzero(
-                pixel_area > 66)/pixel_area.shape[0]
-            if large_pixel_frac > 0.1 or pixel_area.max() > 110:
+                pixel_area_non_agg > 66)/pixel_area_non_agg.shape[0]
+            if large_pixel_frac > 0.1 or pixel_area_non_agg.max() > 110:
                 self.large_pixel_cloud = True
             self.cloud_size_km_list.append(cloud_size_km)
             self.max_size_km = max(self.max_size_km, cloud_size_km)
@@ -220,20 +269,20 @@ class Cloud:
             # self.ice_fraction_arr[n_timesteps]=ice_fraction
             self.ice_fraction_list.append(ice_fraction)
             if cot_values is not None:
-                self.update_cot_variables(cot_values, pixel_area)
+                self.update_cot_variables(cot_values, pixel_area_non_agg)
             if ctp_values is not None:
-                self.update_ctp_variables(ctp_values, pixel_area)
+                self.update_ctp_variables(ctp_values, pixel_area_non_agg)
             if ctt_values is not None:
-                self.update_ctt_variables(ctt_values, pixel_area)
+                self.update_ctt_variables(ctt_values, pixel_area_non_agg)
             
 
-    def update_cot_variables(self, cot_values, pixel_area):
+    def update_cot_variables(self, cot_values, pixel_area_non_agg):
         cot_nan_frac = np.count_nonzero(
             np.isnan(cot_values))/cot_values.shape[0]
         if cot_nan_frac > 0.1:
             self.valid_cot_cloud = False
         self.cot_nan_frac_list.append(cot_nan_frac)
-        weights = pixel_area[~np.isnan(cot_values)]
+        weights = pixel_area_non_agg[~np.isnan(cot_values)]
         if len(weights) > 0:
             cot_values = cot_values[~np.isnan(cot_values)]
             mean_cot, std_cot = self.weighted_avg_and_std(cot_values, weights)
@@ -247,13 +296,13 @@ class Cloud:
         self.mean_cot_list.append(mean_cot)
         self.std_cot_list.append(std_cot)
 
-    def update_ctp_variables(self, ctp_values, pixel_area):
+    def update_ctp_variables(self, ctp_values, pixel_area_non_agg):
         ctp_nan_frac = np.count_nonzero(
             np.isnan(ctp_values))/ctp_values.shape[0]
         if ctp_nan_frac > 0.1:
             self.valid_ctp_cloud = False
         self.ctp_nan_frac_list.append(ctp_nan_frac)
-        weights = pixel_area[~np.isnan(ctp_values)]
+        weights = pixel_area_non_agg[~np.isnan(ctp_values)]
         if len(weights) > 0:
             ctp_values = ctp_values[~np.isnan(ctp_values)]
             mean_ctp, std_ctp = self.weighted_avg_and_std(ctp_values, weights)
@@ -267,8 +316,8 @@ class Cloud:
         self.mean_ctp_list.append(mean_ctp)
         self.std_ctp_list.append(std_ctp)
 
-    def update_ctt_variables(self, ctt_values, pixel_area):
-        weights = pixel_area[~np.isnan(ctt_values)]
+    def update_ctt_variables(self, ctt_values, pixel_area_non_agg):
+        weights = pixel_area_non_agg[~np.isnan(ctt_values)]
         if len(weights) > 0:
             ctt_values = ctt_values[~np.isnan(ctt_values)]
             mean_ctt, std_ctt = self.weighted_avg_and_std(ctt_values, weights)

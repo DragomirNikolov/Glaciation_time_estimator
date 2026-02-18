@@ -181,12 +181,20 @@ def get_combined_cloud_df(config):
         # Iterate over each pole
         for pole in config["pole_folders"]:
             # Construct the file path
-            fp = os.path.join(
+            if config["Resample"]:
+                fp = os.path.join(
                 config['postprocessing_output_dir'],
                 pole,
                 folder_name,
-                f"Agg_{agg_fact:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}.parquet"
+                f"R_Agg_{agg_fact:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}.parquet"
             )
+            else:
+                fp = os.path.join(
+                    config['postprocessing_output_dir'],
+                    pole,
+                    folder_name,
+                    f"Agg_{agg_fact:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}.parquet"
+                )
             try:
                 # Read the parquet file into a dataframe
                 df = pd.read_parquet(fp)
@@ -207,7 +215,12 @@ def get_combined_cloud_df(config):
     # Combine all dataframes into a single dataframe
     cloud_df = pd.concat([df for sublist in cloud_properties_df_list for df in sublist], ignore_index=True)
     #Save the combined dataframe
-    cloud_df_path = os.path.join(config['postprocessing_output_dir'],"Results",f"Agg_{config['agg_fact']:02}_clouds_{folder_name}.parquet")
+    if config["Resample"]:
+        filename = f"R_Agg_{config['agg_fact']:02}_clouds_{folder_name}.parquet"
+    else:
+        filename = f"Agg_{config['agg_fact']:02}_clouds_{folder_name}.parquet"
+
+    cloud_df_path = os.path.join(config['postprocessing_output_dir'],"Results",filename)
     os.makedirs(os.path.dirname(cloud_df_path), exist_ok=True)
     cloud_df.to_parquet(cloud_df_path)
     return cloud_df
@@ -238,10 +251,14 @@ def gen_glac_df(result_df, combined_cloud_df):
 
 def save_glac_df(glaciations_df, config):
     for pole in config["pole_folders"]:
+        if config["Resample"]:
+            filename = f"R_Agg_{config['agg_fact']:02}_glaciations"
+        else:
+            filename = f"Agg_{config['agg_fact']:02}_glaciations"
         output_dir = os.path.join(
             config['postprocessing_output_dir'], pole,
             config['time_folder_name'],
-            f"Agg_{config['agg_fact']:02}_glaciations"
+            filename
         )
         # Save DataFrame to Parquet
         output_dir_parq = output_dir + ".parquet"
@@ -266,7 +283,11 @@ def extract_glaciations_single_period(config):
     print("Generating glaciations dataframe")
     glaciations_df = gen_glac_df(result_df, combined_cloud_df)
     folder_name = f"{config['start_time'].strftime(config['time_folder_format'])}_{config['end_time'].strftime(config['time_folder_format'])}"
-    glac_df_path = os.path.join(config['postprocessing_output_dir'],"Results",f"Agg_{config['agg_fact']:02}_glaciations_{folder_name}.parquet")
+    if config["Resample"]:
+        filename = f"R_Agg_{config['agg_fact']:02}_glaciations_{folder_name}.parquet"
+    else:
+        filename = f"Agg_{config['agg_fact']:02}_glaciations_{folder_name}.parquet"
+    glac_df_path = os.path.join(config['postprocessing_output_dir'],"Results",filename)
     os.makedirs(os.path.dirname(glac_df_path), exist_ok=True)
     print(f"Writing glaciations to parquet: {glac_df_path}")
     glaciations_df.to_parquet(glac_df_path)

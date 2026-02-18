@@ -276,6 +276,22 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
         output_dir_csv = output_dir + ".csv"
         cloudinfo_df.to_csv(output_dir_csv)
 
+# Latitude and Longitude arrays to pixel area array
+def lat_lon_to_pix_arr(lat_arr,lon_arr):
+    """
+    Convert latitude and longitude arrays to pixel areas based on a Spherical earth model
+    
+    Parameters:
+    lat_arr (array-like): 2D Array of latitude values.
+    lon_arr (array-like): 2D Array of longitude values.
+
+    Returns:
+    tuple: Two arrays containing the pixel indices for latitude and longitude.
+    """
+    res_lat = np.pad(abs(lat_arr[0,1:,0] - lat_arr[0,:-1,0]),(0,1), 'edge')  # degrees per pixel latitude direction
+    res_lon = np.pad(abs(lon_arr[0,0,1:] - lon_arr[0,0,:-1]),(0,1), 'edge')   # degrees per pixel longitude direction
+    return 110*110*np.outer(res_lat,res_lon)[np.newaxis,:,:]*np.cos(np.deg2rad(lat_arr)) 
+
 
 # @profile
 def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area=None, pix_area_agg = None,  lon=None, lat=None) -> None:
@@ -311,8 +327,8 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
     # Cloud(f'{temp_ind}_{i}') for i in range(n_tracks)])
     # print(f"Analyzing T: {min_temp} to {max_temp} Agg={config['agg_fact']}")
 
-    pix_arr = pix_area.values if pix_area is not None else np.ones(lon_arr.shape)
-    pix_arr_agg = pix_area_agg.values if pix_area_agg is not None else np.ones(lon_arr.shape)
+    pix_arr = pix_area.values if pix_area is not None else lat_lon_to_pix_arr(lat_arr, lon_arr)
+    pix_arr_agg = pix_area_agg.values if pix_area_agg is not None else lat_lon_to_pix_arr(lat_arr, lon_arr)
 
     for fp_ind in range(len(basetimes)):
         time = basetimes[fp_ind]

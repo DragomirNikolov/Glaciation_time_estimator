@@ -26,17 +26,21 @@ def generate_remote_fps(config, cmd_args):
     target_dict = generate_filename_dict(config, exclude_existing=False)
     # Replace filename parts to include temperature bounds.
     if config["Resample"]:
-        agg_tag = f"R_Agg_{config['agg_fact']:02}"
+        agg_tag = f"R_Agg_{config['agg_fact']:02}_"
     else:
-        agg_tag = f"Agg_{config['agg_fact']:02}"
+        agg_tag = f"Agg_{config['agg_fact']:02}_"
     target_fps = np.char.replace(
         target_dict[cmd_args["pole"]]["filter"],
-        f"{agg_tag}_{config['agg_fact']:02}_",
-        f"{agg_tag}_T_{abs(cmd_args['temp_bounds'][0]):02}_{abs(cmd_args['temp_bounds'][1]):02}_"
+        f"{agg_tag}",
+        f"{agg_tag}T_{abs(cmd_args['temp_bounds'][0]):02}_{abs(cmd_args['temp_bounds'][1]):02}_"
     )
     # print(target_dict[cmd_args["pole"]]["filter"])
     # print(config["CLAAS_fp"])
-    # print(target_fps)
+    print("Agg tag: ", agg_tag)
+    print("First part :", f"{agg_tag}_{config['agg_fact']:02}_")
+    print(
+        "Second part :", f"{agg_tag}_T_{abs(cmd_args['temp_bounds'][0]):02}_{abs(cmd_args['temp_bounds'][1]):02}_")
+    print(target_fps)
 
     target_fps = np.char.replace(target_fps, config["CLAAS_fp"],"")
     return np.char.replace(target_fps, "Resampled_Data", "Filtered_Data")
