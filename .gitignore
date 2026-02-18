@@ -170,3 +170,5 @@ cython_debug/
 !/grids/agg_pixel_area_sp.nc
 !/Result_analysis/Publication_figures/Multiyear_analysis/*
 !/Result_analysis/Publication_figures/CLAAS_processing_data/*
+/Result_analysis/Publication_figures/Multiyear_analysis/heatmap_glac_data.npy
+/Result_analysis/Publication_figures/Multiyear_analysis/clouds_by_temp_monthly.nc
