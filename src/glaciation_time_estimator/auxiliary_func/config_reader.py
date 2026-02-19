@@ -24,6 +24,29 @@ def parse_cmd_args():
 def remove_filesystem_name(string):
     return string.strip(f'{os.uname()[1].split("-")[0]}:')
 
+# top_key is the key in the config that informs the function if the extra keys should be expected
+def optional_key_check(config: dict, keys_to_check: list , config_keys_set: set, top_key: any, top_key_values: list, extra_keys: list):
+    """
+    Adds extra keys to chck if the top_key is within the values in top_key_values
+    
+    :param config: GTE config dictionary
+    :param keys_to_check: List of keys that have already been determined to be expected in the config.
+                         This function will append to this list if the top_key condition is met.
+    :param config_keys_set: Set of keys in the config that will be compared to keys to check. This function will remove the extra keys from this set if the top_key condition is not met.
+    :param top_key: 
+    :param top_key_value: Description
+    :param extra_keys: Description
+    """
+    whole_new_key_list = extra_keys.append(top_key)
+    try:
+        if config.get[top_key] in top_key_values:
+            keys_to_check.extend(whole_new_key_list)
+        else:
+            config_keys_set -= set(whole_new_key_list)
+        return keys_to_check, config_keys_set
+    except KeyError:
+        config_keys_set -= set(whole_new_key_list)
+        return keys_to_check, config_keys_set
 
 def check_keys(config):
     keys_to_check = [
@@ -53,11 +76,13 @@ def check_keys(config):
         'n_postproc_cores'
     ]
     config_keys_set = set(config.keys())
-    if config.get('Analyze_year',False):
-        keys_to_check.extend(['Analyze_year','n_month_parts','yearly_config_folder'])
-    expected_keys_set = set(keys_to_check) 
-    if not config.get('Analyze_year',False):
-        config_keys_set -= {'Analyze_year','n_month_parts','yearly_config_folder'}
+    # if config.get('Analyze_year',False):
+    #     keys_to_check.extend(['Analyze_year','n_month_parts','yearly_config_folder'])
+    # else:
+    #     config_keys_set -= {'Analyze_year','n_month_parts','yearly_config_folder'}
+    keys_to_check, config_keys_set = optional_key_check(config, keys_to_check, config_keys_set, 'Analyze_year', True, ['n_month_parts','yearly_config_folder'])
+    keys_to_check, config_keys_set = optional_key_check(config, keys_to_check, config_keys_set, 'validation_mode', ["dardar", "DARDAR"], ["DARDAR_fp"])
+    expected_keys_set = set(keys_to_check)
     assert config_keys_set == expected_keys_set, f"The keys: {config_keys_set.symmetric_difference(expected_keys_set)} are missing or redundant in the configuration file"
 
 
@@ -77,7 +102,7 @@ def format_config(config):
     config['job_output_fp'] = remove_filesystem_name(config['job_output_fp'])
     config['postprocessing_output_dir'] = remove_filesystem_name(
         config['postprocessing_output_dir'])
-
+    if config.get("")
     return config
 
 

@@ -8,5 +8,5 @@ fi
 CONFIG_NAME="$(basename "$CONFIG_FILE")"   # strip everything but the last path element
 
 sbatch -J "${CONFIG_NAME}_preproc" \
-      "${GTE_DIR}/slurm_jobs/1_preprocessing/preproc_job.bsub" \
+      "${GTE_DIR}/slurm_jobs/1_preprocessing/preproc_job_testing.bsub" \
       -c "$CONFIG_FILE"

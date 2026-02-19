@@ -116,7 +116,7 @@ class Cloud:
         assert (pixel_area_agg > 0).all(), f"0 or negative values in aggregated pixel area array {pixel_area_agg}"
         assert (len(pixel_area_agg) == len(cloud_values)), f"Length of pixel area array ({len(pixel_area_non_agg)}) does not match length of cloud values array ({len(cloud_values)})"
 
-    def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg, pixel_area_agg):
+    def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg, pixel_area_agg, dd_cph=None, dd_cth=None, dd_cth_std=None):
         """
         Main function of the class. This is executed each timestep the cloud is present.
         Data about the cloud top pixels is passed and the cloud properties and time series are updated.

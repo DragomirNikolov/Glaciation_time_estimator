@@ -6,6 +6,7 @@ from datetime import datetime
 from glaciation_time_estimator.auxiliary_func.config_reader import read_config
 from glaciation_time_estimator.data_postprocessing.Single_cloud_analysis import Cloud
 from glaciation_time_estimator.data_postprocessing.Job_result_fp_generator import generate_tracking_filenames
+from glaciation_time_estimator.data_postprocessing.dardar_reindexing import build_dardar_index, match_dardar_to_cloud
 from multiprocessing import Manager, Pool
 from glaciation_time_estimator.auxiliary_func.Nestable_multiprocessing import NestablePool
 from functools import partial
@@ -182,6 +183,21 @@ def extract_ctx_vars(time, pole, config):
     with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename)) as ctx_data:
         return ctx_data['ctp'].values, ctx_data['ctt'].values
 
+def extract_dardar_vars(time, config):
+    dardar_filename = time.strftime(
+            "%Y/%m/%d/DD_CT_%Y%m%d_%H%M.nc")
+    with xr.open_dataset(os.path.join(config["DARDAR_fp"], dardar_filename)) as dardar_data:
+        return dardar_data['cph_mean'].values, dardar_data['cth_mean'].values, dardar_data['cth_std'].values
+
+
+def extract_dardar_cords(time, config):
+    dardar_filename = time.strftime(
+            "%Y/%m/%d/DD_CT_%Y%m%d_%H%M.nc")
+    with xr.open_dataset(os.path.join(config["DARDAR_fp"], dardar_filename)) as dardar_data:
+        return dardar_data['lat_bin'].values, dardar_data['lon_bin'].values
+
+
+
 def extract_aux_vars(aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr):
     ind1 = cloud_location_ind_non_agg[0]
     ind2 = cloud_location_ind_non_agg[1]
@@ -292,15 +308,30 @@ def lat_lon_to_pix_arr(lat_arr,lon_arr):
     res_lon = np.pad(abs(lon_arr[0,0,1:] - lon_arr[0,0,:-1]),(0,1), 'edge')   # degrees per pixel longitude direction
     return 110*110*np.outer(res_lat,res_lon)[np.newaxis,:,:]*np.cos(np.deg2rad(lat_arr)) 
 
-
 # @profile
 def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area=None, pix_area_agg = None,  lon=None, lat=None) -> None:
+    """
+    Analises a given cloud top temperature range and saves the results in a dataframe.
+    
+    Parameters:
+        temp_ind (int): Index of the temperature range to analyze.
+        tracking_fps (dict): Dictionary containing file paths for the tracking data (PyFlexTrkr output).
+        pole (str): Pole to analyze ("N" or "S", also known as hemisphere :)).
+        config (dict): Configuration dictionary containing parameters for the analysis. Those are the gte_config.yaml conntents .
+        pix_area (array-like, optional): 3D (x,y,1) Array of pixel area values for non-resampled data. Required if config["Resample"] is False.
+        pix_area_agg (array-like, optional): 3D (x,y,1) Array of pixel area values on the aggregated grid. Required if config["Resample"] is False.
+        lon (array-like, optional): 3D (x,y,1) Array of cell longitude values. Required if config["Resample"] is False.
+        lat (array-like, optional): 3D (x,y,1) Array of cell latitude values. Required if config["Resample"] is False.
+    Returns:
+        Nothing
+    """
     # Load configuration parameters
     min_temp, max_temp = config['min_temp_arr'][temp_ind], config['max_temp_arr'][temp_ind]
     abs_min_temp, abs_max_temp = abs(round(min_temp)), abs(round(max_temp))
     is_resampled = config["Resample"]
     collect_add_properties = config["collect_additional_properties"]
     temp_key = f'{abs_min_temp}_{abs_max_temp}'
+    validation_mode = config['validation_mode']
 
     # Load datasets
     try:
@@ -329,7 +360,8 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
 
     pix_arr = pix_area.values if pix_area is not None else lat_lon_to_pix_arr(lat_arr, lon_arr)
     pix_arr_agg = pix_area_agg.values if pix_area_agg is not None else lat_lon_to_pix_arr(lat_arr, lon_arr)
-
+    if validation_mode == "dardar":
+        dd_lon , dd_lat = None, None
     for fp_ind in range(len(basetimes)):
         time = basetimes[fp_ind]
         time_str = time.strftime("%Y%m%d_%H%M%S")
@@ -340,6 +372,13 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
         if collect_add_properties:
             cot_arr, cwp_arr = extract_cpp_vars(time, pole, config)
             ctp_arr, ctt_arr = extract_ctx_vars(time, pole, config)
+
+        if validation_mode == "dardar":
+            dd_cph, dd_cth, dd_cth_std = extract_dardar_vars(time, config)
+            if dd_lon is None or dd_lat is None:
+                dd_lat, dd_lon = extract_dardar_cords(time, config)
+                dardar_index = build_dardar_index(dd_lat, dd_lon)
+
 
         cloudtrack_fp = tracking_fps[pole][temp_key]['cloudtracks'][fp_ind]
 
@@ -429,8 +468,23 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                                 []), np.array([]), np.array([])
                         # print(np.info(cloud_cot_values))
                         # assert (cloud_pix_area_values.size >= ((cloud_cph_values.size-1) * (config['agg_fact'] ** 2))),  "Pixel area size array mismatch"
+                        cloud_dd_cph=None
+                        cloud_dd_cth=None
+                        cloud_dd_cth_std=None
+                        if validation_mode == "dardar":
+                            # Match DARDAR to EACH cloud pixel location
+                            cloud_dd_cph, cloud_dd_cth, cloud_dd_cth_std = match_dardar_to_cloud(
+                                dardar_index,
+                                dd_cph, dd_cth, dd_cth_std,
+                                cloud_lat_values, cloud_lon_values,
+                                max_km=config.get("dardar_max_match_km", None),  # optional
+                                fill_value=np.nan
+                                )
                         cloud_arr[track_number-1].update_status(
-                            time, cloud_cph_values, cloud_cot_values, cloud_ctp_values, cloud_ctt_values, cloud_lat_values, cloud_lon_values, cloud_pix_area_values, agg_pix_area_values)
+                            time,
+                            cloud_cph_values, cloud_cot_values, cloud_ctp_values, cloud_ctt_values,
+                            cloud_lat_values, cloud_lon_values, cloud_pix_area_values, agg_pix_area_values,
+                            dd_cph=cloud_dd_cph, dd_cth=cloud_dd_cth, dd_cth_std=cloud_dd_cth_std)
 
                 else:
                     cloud_arr[track_number-1].update_missing_cloud()

@@ -25,7 +25,10 @@ fi
 if [ -z "$agg_fact" ]; then
     agg_fact=20
     echo "Assuming default value ${agg_fact} for aggregation factor."
+else
+    echo "Using aggregation factor: ${agg_fact}"
 fi
+
 job_ids=()
 config_name="${GTE_CONFIG_DIR##*/}"
 # for dt in 3 5 6; do
@@ -33,7 +36,8 @@ for dt in 6; do
     for min_temp in $(seq $dt $dt 38); do
         # max = min - dt because we deal with absolutes of negative numbers
         max_temp=$((min_temp - dt))
-        for pole in "np"; do #"sp"; do
+        for pole in "np" "sp"; do
+            echo "Submitting tracking job for config: ${config_name}, pole: ${pole}"
             if [ -z "$YEAR" ]; then
                 name=T_"$min_temp"_"$max_temp"_"$pole"_"${config_name::-5}"
             else

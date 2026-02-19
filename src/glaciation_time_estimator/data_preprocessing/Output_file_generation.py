@@ -627,4 +627,4 @@ class OutputNonResampledFile(OutputFile):
             raise ValueError(f"Mismatch between dimentons of dataset_list({len(dataset_list)}) and output_list({len(output_fps)}).\n Dataset list: {dataset_list} Output list:{output_fps}")
         xr.save_mfdataset(dataset_list, list(output_fps))
         self.cph_ds.close()
-        self.ctx_ds.close(
+        self.ctx_ds.close()
