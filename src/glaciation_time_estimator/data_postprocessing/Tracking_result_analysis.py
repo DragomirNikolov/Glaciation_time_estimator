@@ -292,6 +292,7 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
         output_dir_csv = output_dir + ".csv"
         cloudinfo_df.to_csv(output_dir_csv)
 
+
 # Latitude and Longitude arrays to pixel area array
 def lat_lon_to_pix_arr(lat_arr,lon_arr):
     """
@@ -307,6 +308,7 @@ def lat_lon_to_pix_arr(lat_arr,lon_arr):
     res_lat = np.pad(abs(lat_arr[0,1:,0] - lat_arr[0,:-1,0]),(0,1), 'edge')  # degrees per pixel latitude direction
     res_lon = np.pad(abs(lon_arr[0,0,1:] - lon_arr[0,0,:-1]),(0,1), 'edge')   # degrees per pixel longitude direction
     return 110*110*np.outer(res_lat,res_lon)[np.newaxis,:,:]*np.cos(np.deg2rad(lat_arr)) 
+
 
 # @profile
 def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area=None, pix_area_agg = None,  lon=None, lat=None) -> None:
@@ -406,7 +408,6 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
         # print(cloud_id_in_field)
 
         for track_number in cloud_id_in_field:
-
             try:
                 if cloud_arr[track_number-1] is None:
                     cloud_arr[track_number-1] = Cloud(track_number, is_resampled)
@@ -416,7 +417,6 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                 continue
 
             if (not cloud_arr[track_number-1].terminate_cloud):
-                # TODO:SPEED UP NEXT TWO LINES (set_cloud_values and update_status)
                 cord = hash_map_cloud_numbers[track_number]
                 cloud_location_ind = [cord[0, :], cord[1, :]]
 
@@ -434,9 +434,6 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                         cloud_pix_area_values, cloud_lat_values, cloud_lon_values = extract_aux_vars(
                             aux_ind, cloud_location_ind, pix_arr, lat_arr, lon_arr)
                         agg_pix_area_values = pix_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
-                        # TODO:SPEED UP NEXT TWO LINES (set_cloud_values and update_status)
-                        # cloud_arr[track_number-1].update_status(
-                        #     time, cloud_cph_values, extract_value(cords.lat[avg_lat_ind]), extract_value(cords.lon[avg_lon_ind]), pixel_area=cords.lat_resolution.values*cords.lon_resolution.values)
                         if collect_add_properties:
                             cloud_cot_values, cloud_ctp_values, cloud_ctt_values = extract_additional_values(
                                 cot_arr, ctp_arr, ctt_arr, cloud_location_ind)
