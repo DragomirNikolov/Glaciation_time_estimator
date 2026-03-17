@@ -105,6 +105,7 @@ def format_config(config):
     config['job_output_fp'] = remove_filesystem_name(config['job_output_fp'])
     config['postprocessing_output_dir'] = remove_filesystem_name(
         config['postprocessing_output_dir'])
+    config["validation_mode"] = config["validation_mode"].lower()
     return config
 
 

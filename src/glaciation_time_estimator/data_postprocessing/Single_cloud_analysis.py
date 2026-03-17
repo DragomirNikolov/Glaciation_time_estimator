@@ -1,7 +1,11 @@
 import numpy as np
 import xarray as xr
 import datetime as dt
-import math
+import numpy as np
+import xarray as xr
+import datetime as dt
+# I have no idea why this sqrt but will keep it to be sure
+from math import sqrt as m_sqrt
 
 class Cloud:
     """
@@ -88,6 +92,17 @@ class Cloud:
 
         self.n_timesteps_no_cloud = 0
         self.terminate_cloud = False
+        
+        # dd_* = DARDAR variables
+        self.dd_cph_list = []
+        self.dd_cth_list = []
+        self.dd_cth_std_list = []
+
+        self.dd_cph_deviation = []
+        self.dd_cph_std_list = []
+        self.dd_pix_claas_cph_meas = []
+        self.dd_pix_claas_cph_std = []
+
 
     def __str__(self):
         return f"{self.is_liq},{self.is_mix},{self.is_ice},"
@@ -105,7 +120,7 @@ class Cloud:
         average = np.average(values, weights=weights)
         # Fast and numerically precise:
         variance = np.average((values-average)**2, weights=weights)
-        return (average, math.sqrt(variance))
+        return (average, m_sqrt(variance))
 
     def check_status_inputs(self, cloud_values,pixel_area_non_agg, pixel_area_agg):
         """
@@ -115,6 +130,55 @@ class Cloud:
         assert (~np.isnan(pixel_area_agg).any()).any(), "NaN values in pixel area array after filtering"
         assert (pixel_area_agg > 0).all(), f"0 or negative values in aggregated pixel area array {pixel_area_agg}"
         assert (len(pixel_area_agg) == len(cloud_values)), f"Length of pixel area array ({len(pixel_area_non_agg)}) does not match length of cloud values array ({len(cloud_values)})"
+
+
+
+    def dardar_get_valid_values(self,dd_cph,dd_cth,dd_cth_std):
+        """
+        Get valid DARDAR values for the cloud. This is used for validation of the cloud properties.
+        """
+        if dd_cph is not None:
+            dd_cph = dd_cph[~np.isnan(dd_cph)]
+        if dd_cth is not None:
+            dd_cth = dd_cth[~np.isnan(dd_cth)]
+        if dd_cth_std is not None:
+            dd_cth_std = dd_cth_std[~np.isnan(dd_cth_std)]
+        return dd_cph, dd_cth, dd_cth_std
+    
+    def check_non_agg_values(self, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg):
+        """Check the validity of the cloud values and filter out invalid pixels. This is important to avoid errors in
+        """
+        ## Aggregated pixels may cover NaN (e.g. outside the globe) in the original resolution.
+        ## We filter those using ind_to_take
+        ind_to_take = ~np.isnan(pixel_area_non_agg)
+        pixel_area_non_agg = pixel_area_non_agg[ind_to_take]
+        
+            
+        if sum(pixel_area_non_agg) == 0 or len(pixel_area_non_agg)==0:
+            message = f"""
+            Cloud_properties:\n
+            ID: {self.id}\n
+            Time: {time}\n
+            Max_size_km: {self.max_size_km}\n
+            Valid_cot_cloud: {self.valid_cot_cloud}\n
+            Valid_ctp_cloud: {self.valid_ctp_cloud}\n
+            pixel_area_non_agg: {pixel_area_non_agg}\n
+            Ind to take: {ind_to_take}\n
+            Cloud_values: {cloud_values}\n
+            Cot_values: {cot_values}\n
+            Ctp_values: {ctp_values}\n
+            Cloud_lat: {cloud_lat}\n
+            Cloud_lon: {cloud_lon}
+            """ 
+            raise ValueError("All pixel areas are zero or pixel area size is 0:\n"+message)
+        # print(message)
+
+        cot_values = cot_values[ind_to_take] if cot_values.size !=0 else None
+        ctp_values = ctp_values[ind_to_take] if ctp_values.size !=0 else None
+        ctt_values = ctt_values[ind_to_take] if ctt_values.size !=0 else None
+        cloud_lat = cloud_lat[ind_to_take]
+        cloud_lon = cloud_lon[ind_to_take]
+        return cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg
 
     def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg, pixel_area_agg, dd_cph=None, dd_cth=None, dd_cth_std=None):
         """
@@ -149,35 +213,9 @@ class Cloud:
 
 
         ## Aggregated pixels may cover NaN (e.g. outside the globe) in the original resolution.
-        ## We filter those using ind_to_take
-        ind_to_take = ~np.isnan(pixel_area_non_agg)
-        pixel_area_non_agg = pixel_area_non_agg[ind_to_take]
+        ## We filter those using check_non_agg_values
+        cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg = self.check_non_agg_values(cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg)
         
-            
-        if sum(pixel_area_non_agg) == 0 or len(pixel_area_non_agg)==0:
-            message = f"""
-            Cloud_properties:\n
-            ID: {self.id}\n
-            Time: {time}\n
-            Max_size_km: {self.max_size_km}\n
-            Valid_cot_cloud: {self.valid_cot_cloud}\n
-            Valid_ctp_cloud: {self.valid_ctp_cloud}\n
-            pixel_area_non_agg: {pixel_area_non_agg}\n
-            Ind to take: {ind_to_take}\n
-            Cloud_values: {cloud_values}\n
-            Cot_values: {cot_values}\n
-            Ctp_values: {ctp_values}\n
-            Cloud_lat: {cloud_lat}\n
-            Cloud_lon: {cloud_lon}
-            """ 
-            raise ValueError("All pixel areas are zero or pixel area size is 0:\n"+message)
-        # print(message)
-
-        cot_values = cot_values[ind_to_take] if cot_values.size !=0 else None
-        ctp_values = ctp_values[ind_to_take] if ctp_values.size !=0 else None
-        ctt_values = ctt_values[ind_to_take] if ctt_values.size !=0 else None
-        cloud_lat = cloud_lat[ind_to_take]
-        cloud_lon = cloud_lon[ind_to_take]
         cloud_size_px = cloud_values.shape[0]
 
         # We calculated weighted average position of the cloud in latitude and longitude
@@ -197,7 +235,7 @@ class Cloud:
             valid_values = cloud_values[cloud_values >= 1-1e3] - 1
             agg_area_weights = pixel_area_agg[cloud_values >= 1-1e3]
             # print(len(valid_values)/len(cloud_values))
-            print("Agg_area_weights:", agg_area_weights)
+            # print("Agg_area_weights:", agg_area_weights)
             try:
                 ice_fraction = np.average(valid_values, weights=agg_area_weights)
             except Exception as e:
@@ -275,7 +313,49 @@ class Cloud:
             if ctt_values is not None:
                 self.update_ctt_variables(ctt_values, pixel_area_non_agg)
             
+            # dd_cph, dd_cth, dd_cth_std = self.dardar_get_valid_values(dd_cph, dd_cth, dd_cth_std)
+            if dd_cph is not None or dd_cth is not None or dd_cth_std is not None:
+                self.update_dardar_variables(dd_cph,dd_cth,dd_cth_std, cloud_values, cloud_lat)
+            
+    def update_dardar_variables(self, dd_cph,dd_cth,dd_cth_std, cloud_values, cloud_lat):
+        self.update_dardar_cph( dd_cph, cloud_values, cloud_lat)
+        
+    def update_dardar_cph(self, dd_cph, cloud_values, cloud_lat ):
+        if dd_cph.size > 0:
+            # 0.99 is 1 with accounting for floating point errors
+            dd_cloudy_pixels = dd_cph >= 0.99
+            dd_valid_pixels = dd_cph >=0
+            dd_cph_cloudy = dd_cph[dd_cloudy_pixels]-1
+            
+            if dd_cph_cloudy.size > 0:
+                print("Checking dardar cloud")
+                if dd_valid_pixels.shape!=cloud_values.shape:
+                    raise Exception(f"Mismatch between dardar values size and cloud values size dd_cloudy_pixels:\n {dd_cloudy_pixels}\n cloud_values: {cloud_values}\n cloud lat {cloud_lat}")
+                dd_pixel_IF_claas_measurement = cloud_values[dd_valid_pixels].mean()
+                dd_pixel_IF_claas_std = cloud_values[dd_valid_pixels].std()
+                dd_cph_measured = dd_cph_cloudy.mean()
+                self.dd_cph_list.append(dd_cph_measured)
+                self.dd_cph_deviation.append(dd_pixel_IF_claas_measurement - dd_cph_measured)
+                self.dd_cph_std_list.append(dd_cph_cloudy.std())
+                self.dd_pix_claas_cph_meas.append(dd_pixel_IF_claas_measurement)
+                self.dd_pix_claas_cph_std.append(dd_pixel_IF_claas_std)
+            else:
+                # in case there are no cloudy pixels
+                self.dd_cph_list.append(-1)
+                self.dd_cph_deviation.append(-99)
+                self.dd_cph_std_list.append(-1)
+                self.dd_pix_claas_cph_meas.append(-1)
+                self.dd_pix_claas_cph_std.append(-1)
+        else:
+            self.dd_cph_list.append(np.nan)
+            self.dd_cph_deviation.append(np.nan)
+            self.dd_cph_std_list.append(np.nan)
+            self.dd_pix_claas_cph_meas.append(np.nan)
+            self.dd_pix_claas_cph_std.append(np.nan)
 
+
+
+            
     def update_cot_variables(self, cot_values, pixel_area_non_agg):
         cot_nan_frac = np.count_nonzero(
             np.isnan(cot_values))/cot_values.shape[0]

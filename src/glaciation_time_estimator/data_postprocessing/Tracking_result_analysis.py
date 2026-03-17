@@ -108,6 +108,9 @@ def extract_value(val):
 # In wgs84
 
 
+
+
+
 class LatLonCoordinates:
     def __init__(self, lat, lon, is_resampled, agg_fact, pole, temp_key, tracking_fps):
         try:
@@ -183,17 +186,40 @@ def extract_ctx_vars(time, pole, config):
     with xr.open_dataset(os.path.join(config["CLAAS_fp"], pole, ctx_filename)) as ctx_data:
         return ctx_data['ctp'].values, ctx_data['ctt'].values
 
-def extract_dardar_vars(time, config):
-    dardar_filename = time.strftime(
-            "%Y/%m/%d/DD_CT_%Y%m%d_%H%M.nc")
-    with xr.open_dataset(os.path.join(config["DARDAR_fp"], dardar_filename)) as dardar_data:
-        return dardar_data['cph_mean'].values, dardar_data['cth_mean'].values, dardar_data['cth_std'].values
+# def extract_dardar_vars(time, config):
+#     dardar_filename = time.strftime("%Y/%m/%d/DD_CT_%Y%m%d_%H%M.nc")
 
+#     with xr.open_dataset(os.path.join(config["DARDAR_CPH_fp"], dardar_filename)) as ds:
+#         # make them (lat_bin, lon_bin)
+#         cph = ds["cph_mean"].isel(time_bin=0).values
+#         cth = ds["cth_mean"].isel(time_bin=0).values
+#         cth_std = ds["cth_std"].isel(time_bin=0).values
+#     return cph, cth, cth_std
+
+def extract_dardar_vars(time, config, lat , lon):
+    n_lon, n_lat =  len(lon), len(lat)
+    shp = ( n_lat, n_lon)
+
+    def nan_out():
+        return (np.full(shp, np.nan, np.float32),
+                np.full(shp, np.nan, np.float32),
+                np.full(shp, np.nan, np.float32))
+
+    rel = time.strftime("%Y/%m/%d/DD_CT_%Y%m%d_%H%M.nc")
+    fp = os.path.join(config["DARDAR_CPH_fp"], rel)
+    if not os.path.isfile(fp):
+        return nan_out()
+    
+    with xr.open_dataset(fp) as ds:
+        cph = ds["cph_mean"].isel(time_bin=0).values
+        cth = ds["cth_mean"].isel(time_bin=0).values
+        cth_std = ds["cth_std"].isel(time_bin=0).values
+    return cph, cth, cth_std
 
 def extract_dardar_cords(time, config):
     dardar_filename = time.strftime(
             "%Y/%m/%d/DD_CT_%Y%m%d_%H%M.nc")
-    with xr.open_dataset(os.path.join(config["DARDAR_fp"], dardar_filename)) as dardar_data:
+    with xr.open_dataset(os.path.join(config["DARDAR_CPH_fp"], dardar_filename)) as dardar_data:
         return dardar_data['lat_bin'].values, dardar_data['lon_bin'].values
 
 
@@ -219,13 +245,15 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
                "avg_lon", "start_ice_fraction", "end_ice_fraction",
                "ice_frac_hist", "cot_hist", "cot_std_hist",  "cot_nan_frac_hist", "ctp_hist", "ctp_std_hist", "ctp_nan_frac_hist", "ctt_hist", "ctt_std_hist" , "lat_hist", "lon_hist",
                "size_hist_km"]
+    if config["validation_mode"] == "dardar":
+        columns.extend(["dd_ice_frac_hist", "dd_ice_frac_std_hist","dd_ice_frac_dev_hist", "dd_cth_hist", "dd_cth_std_hist", "dd_pix_claas_if_hist", "dd_pix_claas_if_std_hist"])
     datapoints_per_cloud = len(columns)
     cloudinfo_df = pd.DataFrame(
         index=range(len(cloud_arr)), columns=columns)
     for cloud_ind in range(len(cloud_arr)):
         current_cloud = cloud_arr[cloud_ind]
         if current_cloud is not None:
-            cloudinfo_df.iloc[cloud_ind] = [
+            variable_list = [
                 current_cloud.id,
                 current_cloud.large_pixel_cloud,
                 current_cloud.valid_cot_cloud,
@@ -265,6 +293,18 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
                 current_cloud.lon_list,
                 current_cloud.cloud_size_km_list
             ]
+            if config["validation_mode"] == "dardar":
+                variable_list.extend([
+                    current_cloud.dd_cph_list,
+                    current_cloud.dd_cph_std_list,
+                    current_cloud.dd_cph_deviation,
+                    current_cloud.dd_cth_list,
+                    current_cloud.dd_cth_std_list,
+                    current_cloud.dd_pix_claas_cph_meas,
+                    current_cloud.dd_pix_claas_cph_std
+                ])
+            cloudinfo_df.iloc[cloud_ind] = variable_list
+
 
     # Ensure output directory exists
     if config["Resample"]:
@@ -311,7 +351,7 @@ def lat_lon_to_pix_arr(lat_arr,lon_arr):
 
 
 # @profile
-def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area=None, pix_area_agg = None,  lon=None, lat=None) -> None:
+def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area: np.array = None, pix_area_agg: np.array  = None,  lon: np.array =None, lat: np.array =None, lat_agg: np.array  = None, lon_agg: np.array =None) -> None:
     """
     Analises a given cloud top temperature range and saves the results in a dataframe.
     
@@ -362,8 +402,11 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
 
     pix_arr = pix_area.values if pix_area is not None else lat_lon_to_pix_arr(lat_arr, lon_arr)
     pix_arr_agg = pix_area_agg.values if pix_area_agg is not None else lat_lon_to_pix_arr(lat_arr, lon_arr)
+    
     if validation_mode == "dardar":
-        dd_lon , dd_lat = None, None
+        dd_lat , dd_lon = None, None
+        lat_arr_agg = lat_agg.values if lat_agg is not None else None
+        lon_arr_agg = lon_agg.values if lon_agg is not None else None
     for fp_ind in range(len(basetimes)):
         time = basetimes[fp_ind]
         time_str = time.strftime("%Y%m%d_%H%M%S")
@@ -376,10 +419,10 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
             ctp_arr, ctt_arr = extract_ctx_vars(time, pole, config)
 
         if validation_mode == "dardar":
-            dd_cph, dd_cth, dd_cth_std = extract_dardar_vars(time, config)
             if dd_lon is None or dd_lat is None:
                 dd_lat, dd_lon = extract_dardar_cords(time, config)
                 dardar_index = build_dardar_index(dd_lat, dd_lon)
+            dd_cph, dd_cth, dd_cth_std = extract_dardar_vars(time, config, dd_lat, dd_lon)
 
 
         cloudtrack_fp = tracking_fps[pole][temp_key]['cloudtracks'][fp_ind]
@@ -470,10 +513,12 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                         cloud_dd_cth_std=None
                         if validation_mode == "dardar":
                             # Match DARDAR to EACH cloud pixel location
+                            agg_lat_values = lat_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
+                            agg_lon_values = lon_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
                             cloud_dd_cph, cloud_dd_cth, cloud_dd_cth_std = match_dardar_to_cloud(
                                 dardar_index,
                                 dd_cph, dd_cth, dd_cth_std,
-                                cloud_lat_values, cloud_lon_values,
+                                agg_lat_values, agg_lon_values,
                                 max_km=config.get("dardar_max_match_km", None),  # optional
                                 fill_value=np.nan
                                 )
@@ -498,6 +543,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
     save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config)
 
 
+
 def analize_single_pole(pole, cloud_dict, tracking_fps, config):
     print(f"Analyzing {pole}")
     aux_ds = xr.load_dataset(config["aux_fps"][pole], decode_times=False)
@@ -516,10 +562,16 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config):
         lon_mat = aux_ds["lon"].load()
         pix_area = aux_ds["pixel_area"].load()
         pix_area_agg = aux_ds_agg["pixel_area"].load()
+        lat_agg = aux_ds_agg["lat"].load()
+        lon_agg = aux_ds_agg["lon"].load()
         assert (~np.isnan(pix_area_agg.values).any()), "NaN values in aggregated pixel area array"
-        part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
-                                         pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat, lat=lat_mat)
-       
+        assert (~np.isnan(lat_agg.values).any()), "NaN values in aggregated pixel area array"
+        if config.get("validation_mode", None) == "dardar":
+            part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
+                                            pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat, lat=lat_mat, lat_agg = lat_agg, lon_agg = lon_agg)
+        else: 
+            part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
+                                            pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat, lat=lat_mat)
         with Pool(n_procs) as pool:
             pool.map(part_single_temp_range, range(
                 len(config['min_temp_arr'])))
@@ -527,6 +579,7 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config):
             pool.join()
         # for ind in range(len(config['min_temp_arr'])):
         #     part_single_temp_range(ind)
+
 
 
 def analyze_tracked_clouds(config):
@@ -542,6 +595,7 @@ def analyze_tracked_clouds(config):
         #     pool.join()
         for pole in config['pole_folders']:
             part_analize_single_pole(pole)
+
 
 
 if __name__ == "__main__":
