@@ -32,7 +32,7 @@ yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimat
 # Check wether the file is split in two folders for the hemispheres (poles)
 pole_split: True
 # Name of said folders
-pole_folders: ["np"]
+pole_folders: ["np","sp"]
 # Boundary date for the CLAAS-3 data
 struct_boundary_date: "20210101_0000"
 
@@ -45,7 +45,8 @@ aux_fps:
 
 aux_fps_agg:
   {
-    "np": "/nfs/ch4/wolke_scratch/dnikolo/MSGI/msgi/model/aux_file.nc",
+    "np": "/nfs/ch4/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_np.nc",
+    "sp": "/nfs/ch4/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_sp.nc"
   }  
 
 #Location of the files used for the temporary grid when resampling is turned off
@@ -72,10 +73,10 @@ job_output_fp: "/nfs/ch4/wolke_scratch/dnikolo/ICON_Data/Job_output_online"
 # Should the file be resampled.
 # If true the code first resamples the original CLAAS-3 L2 geostationary grid to a regular lat-lon grid
 # Reccomended - Resample: False. No claims are made about the functtioning and accuracy of the resampled outputs
-Resample: True
+Resample: False
 # The program aggregates the file in a agg_fact x agg_fact squares as explained in the documentation
-# Reccomended - agg_fact: 3
-agg_fact: 30
+# Reccomended - agg_fact: 3 Validation mode model works only with 3
+agg_fact: 3
 # Total number of cores working on the preprocessing
 # To turn multiprocessing off set this to 1
 n_preproc_cores: 2
@@ -93,7 +94,7 @@ postprocessing_fast_mode: False
 fast_mode_arr_size: 20000
 
 # Folder to output the cloud and glaciation properties parquet (and CSV) files
-postprocessing_output_dir: "/nfs/ch4/wolke_scratch/dnikolo/ICON_Data/Online_postproc_out"
+postprocessing_output_dir: "/nfs/ch4/wolke_scratch/dnikolo/ICON_Data/Online_postproc_out_3_ctt"
 #Format of the postprocessing_output_dir subfolder name in which the outputs from a given run are stored
 time_folder_format: "%Y%m%d.%H%M"
 
@@ -103,9 +104,10 @@ write_csv: True
 n_postproc_cores: 4
 # Defined as every analisis done outside cloud top phase and cloud top temperature
 # Defined as 
-collect_additional_properties: False
+collect_additional_properties: True
 
 # The standard RMSE used to determine wether a glaciation is linear. Read more in the documentation.
 Global_sqrt_mse: 0.05628526744657018
 glac_threshold: 0.4
 
+validation_mode: "model"

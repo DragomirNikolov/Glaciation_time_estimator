@@ -25,7 +25,7 @@ fi
 postproc_job_ids=()
 
 #Iterate over all months and all (in my case 2) parts of each month
-for MONTH in {01..12}; do
+for MONTH in {04..12}; do
     for part in 01 02; do
         # Set name of configuration file
         

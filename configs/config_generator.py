@@ -14,6 +14,10 @@ python /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/confi
     /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Model_grid_tests/short_test.yaml \
     /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Model_grid_tests
 
+python /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/config_generator.py 2007 \
+    /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Validation/2007_tracking/01_01.yaml \
+    /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Model_grid_tests
+
 /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/April_testing/euler_template.yaml \
 """
 import argparse
@@ -55,7 +59,7 @@ def main(year: int, template_path: str, output_root: str) -> None:
         with open(os.path.join(out_dir, f"{month:02d}_01.yaml"), "w") as f:
             f.write(txt1)
 
-         # -------- segment 2: 15th 00:00  -->  15th 15:00 --------
+         # -------- segment 2: 15th 00:00  -->  end of month --------
         s2 = datetime(year, month, 15, 0, 0)
         if month == 12:
             e2 = datetime(year, 12, 31, 23, 45)

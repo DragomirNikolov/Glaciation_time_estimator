@@ -21,8 +21,10 @@ def parse_cmd_args():
     return args.configuration_filepath
 
 
-def remove_filesystem_name(string):
-    return string.strip(f'{os.uname()[1].split("-")[0]}:')
+def remove_filesystem_name(path: str) -> str:
+    host = os.uname()[1].split("-")[0]
+    prefix = f"{host}:"
+    return path[len(prefix):] if path.startswith(prefix) else path
 
 # top_key is the key in the config that informs the function if the extra keys should be expected
 def optional_key_check(config: dict, keys_to_check: list , config_keys_set: set, top_key: any, top_key_values: list, extra_keys: list):

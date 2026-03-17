@@ -93,7 +93,7 @@ postprocessing_fast_mode: False
 fast_mode_arr_size: 20000
 
 # Folder to output the cloud and glaciation properties parquet (and CSV) files
-postprocessing_output_dir: "/nfs/ch4/wolke_scratch/dnikolo/ICON_Data/Online_postproc_out"
+postprocessing_output_dir: "/nfs/ch4/wolke_scratch/dnikolo/ICON_Data/Online_postproc_out_2_ctt"
 #Format of the postprocessing_output_dir subfolder name in which the outputs from a given run are stored
 time_folder_format: "%Y%m%d.%H%M"
 
@@ -103,9 +103,10 @@ write_csv: True
 n_postproc_cores: 4
 # Defined as every analisis done outside cloud top phase and cloud top temperature
 # Defined as 
-collect_additional_properties: False
+collect_additional_properties: True
 
 # The standard RMSE used to determine wether a glaciation is linear. Read more in the documentation.
 Global_sqrt_mse: 0.05628526744657018
 glac_threshold: 0.4
+
 
