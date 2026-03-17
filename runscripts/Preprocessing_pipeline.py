@@ -58,6 +58,10 @@ def format_folder(folder_fp_ind, folder_fps_CTX, folder_fps_CPP, folder_resample
     Ts = []
     cpp_fp_list = folder_fps_CPP[folder_fp_ind]
     ctx_fp_list = folder_fps_CTX[folder_fp_ind]
+    print("CPP_fp_list:",cpp_fp_list )
+    print("CTX_fp_list:",ctx_fp_list )
+    print("Foleder resample res fps:",folder_resample_res_fps)
+    print("Foleder resample res fps:",folder_fp_ind)
     reformated_fp_list = folder_resample_res_fps[folder_fp_ind]
     for filename_ind in range(len(cpp_fp_list)):
         cpp_fp = cpp_fp_list[filename_ind]
@@ -219,6 +223,7 @@ def prepare_pole(pole, target_filenames, config, n_workers):
         target_filenames[pole]["resample_res"])
     folder_agg_res_fps = fps_by_folder(
         target_filenames[pole]["agg_res"])
+    print(target_filenames[pole])
     if config["Resample"]:
         transformer = ProjectionTransformer()
         aux_data = xr.load_dataset(os.path.join(

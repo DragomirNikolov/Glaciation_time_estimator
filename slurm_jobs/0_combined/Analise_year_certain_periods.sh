@@ -9,11 +9,11 @@ fi
 postproc_job_ids=()
 for YEAR in "${YEARS[@]}"; do
     YEAR=$1
-    for MONTH in 09; do
+    for MONTH in {04..12}; do
     # for MONTH in 01; do
-        for part in 02; do
+        for part in 01 02; do
             # Set name of configuration file
-            CONFIG_FILE="${GTE_DIR}/configs/${YEAR}_tracking/${MONTH}_${part}.yaml"
+            CONFIG_FILE="${GTE_DIR}/configs/Validation/${YEAR}_tracking/${MONTH}_${part}.yaml"
             # Run preprocessing job for the current part of month
             preproc_id=$(sbatch --parsable -J "${YEAR}_${MONTH}_${part}_preproc" "${GTE_DIR}slurm_jobs/1_preprocessing/preproc_job.bsub" -c $CONFIG_FILE)
             # Run tracking and post-processing job for the current part of month
