@@ -16,7 +16,7 @@ postproc_job_ids=()
 
 for MONTH in {01..03}; do
     for part in {01..02}; do
-        config_name="${GTE_DIR}/configs/Validation/${YEAR}_tracking/${MONTH}_${part}.yaml"
+        config_name="${GTE_DIR}/configs/Validation_MODIS/${YEAR}_tracking/${MONTH}_${part}.yaml"
         job_name="${MONTH}_${part}_${YEAR}_glac"
         sbatch   -J "$job_name" "${GTE_DIR}slurm_jobs/3_postprocessing/glaciation_detection.bsub" -c $config_name
     done

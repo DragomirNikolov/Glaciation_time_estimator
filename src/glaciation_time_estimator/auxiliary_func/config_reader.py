@@ -83,7 +83,7 @@ def check_keys(config):
     # else:
     #     config_keys_set -= {'Analyze_year','n_month_parts','yearly_config_folder'}
     keys_to_check, config_keys_set = optional_key_check(config, keys_to_check, config_keys_set, 'Analyze_year', [True], ['n_month_parts','yearly_config_folder'])
-    keys_to_check, config_keys_set = optional_key_check(config, keys_to_check, config_keys_set, 'validation_mode', ["dardar", "DARDAR"], ["DARDAR_CPH_fp"])
+    keys_to_check, config_keys_set = optional_key_check(config, keys_to_check, config_keys_set, 'validation_mode', ["dardar", "DARDAR", "modis", "MODIS"], ["val_CPH_fp"])
     expected_keys_set = set(keys_to_check)
     assert config_keys_set == expected_keys_set, f"The keys: {config_keys_set.symmetric_difference(expected_keys_set)} are missing or redundant in the configuration file"
 

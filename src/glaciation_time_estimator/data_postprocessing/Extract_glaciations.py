@@ -134,6 +134,8 @@ def select_peaks(data, filt, significant_peak_tresh=0.2, glac_tresh=0.4):
         filt_data = np.array(filt(data))
     else:
         filt_data = np.array(data)
+    if data is None:
+        return []
     peaks = get_persistent_homology(filt_data)
     prev_peak = Peak(0)
     glac_list = []

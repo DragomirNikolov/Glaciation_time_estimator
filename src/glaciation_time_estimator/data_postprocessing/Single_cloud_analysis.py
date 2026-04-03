@@ -14,7 +14,7 @@ class Cloud:
     """
     # def __new__(self, *args, **kwargs):
     #     return super().__new__(self)
-    def __init__(self, cloud_id, is_resampled):
+    def __init__(self, cloud_id, is_resampled, agg_fact):
         # Set initial parameters
         self.id = cloud_id # tracknumber
         self.is_resampled = is_resampled # whether we are analyzing output directly from CLAAS or after resampling
@@ -94,23 +94,23 @@ class Cloud:
         self.n_timesteps_no_cloud = 0
         self.terminate_cloud = False
         
-        # dd_* = DARDAR variables
+        # val_* = validation variables
         
-        #Dardar validation variables
+        #validation validation variables
         
-        self.dd_cph_list = []
-        self.dd_cph_deviation = []
-        self.dd_cph_std_list = []
-        self.dd_pix_claas_cph_meas = []
-        self.dd_pix_claas_cph_std = []
+        self.val_cph_list = []
+        self.val_cph_deviation = []
+        self.val_cph_std_list = []
+        self.val_pix_claas_cph_meas = []
+        self.val_pix_claas_cph_std = []
 
-        self.dd_cth_list = []
-        self.dd_cth_deviation = []
-        self.dd_cth_std_list = []
-        self.dd_pix_claas_cth_meas = []
-        self.dd_pix_claas_cth_std = []
+        self.val_cth_list = []
+        self.val_cth_deviation = []
+        self.val_cth_std_list = []
+        self.val_pix_claas_cth_meas = []
+        self.val_pix_claas_cth_std = []
         
-        self.dd_cth_std_list = []
+        self.val_cth_std_list = []
 
         self.sum_cloud_cth = 0
         self.avg_cth = None
@@ -121,7 +121,7 @@ class Cloud:
         self.cth_nan_frac_list = []
 
         self.deactivate_cloud = False
-
+        self.agg_fact=agg_fact
 
     def __str__(self):
         return f"{self.is_liq},{self.is_mix},{self.is_ice},"
@@ -150,19 +150,19 @@ class Cloud:
         assert (pixel_area_agg > 0).all(), f"0 or negative values in aggregated pixel area array {pixel_area_agg}"
         assert (len(pixel_area_agg) == len(cloud_values)), f"Length of pixel area array ({len(pixel_area_non_agg)}) does not match length of cloud values array ({len(cloud_values)})"
 
-    def dardar_get_valid_values(self,dd_cph,dd_cth,dd_cth_std):
+    def validation_get_valid_values(self,val_cph,val_cth,val_cth_std):
         """
-        Get valid DARDAR values for the cloud. This is used for validation of the cloud properties.
+        Get valid validation values for the cloud. This is used for validation of the cloud properties.
         """
-        if dd_cph is not None:
-            dd_cph = dd_cph[~np.isnan(dd_cph)]
-        if dd_cth is not None:
-            dd_cth = dd_cth[~np.isnan(dd_cth)]
-        if dd_cth_std is not None:
-            dd_cth_std = dd_cth_std[~np.isnan(dd_cth_std)]
-        return dd_cph, dd_cth, dd_cth_std
+        if val_cph is not None:
+            val_cph = val_cph[~np.isnan(val_cph)]
+        if val_cth is not None:
+            val_cth = val_cth[~np.isnan(val_cth)]
+        if val_cth_std is not None:
+            val_cth_std = val_cth_std[~np.isnan(val_cth_std)]
+        return val_cph, val_cth, val_cth_std
     
-    def check_non_agg_values(self, cot_values, ctp_values, ctt_values, cth_values, cloud_lat, cloud_lon, pixel_area_non_agg, dd_cth, dd_cth_std):
+    def check_non_agg_values(self, cot_values, ctp_values, ctt_values, cth_values, cloud_lat, cloud_lon, pixel_area_non_agg, val_cth, val_cth_std):
         """Check the validity of the cloud values and filter out invalid pixels. This is important to avoid errors in
         """
         ## There are certain locations where the aggregated pixel field has values below 30
@@ -200,15 +200,15 @@ class Cloud:
 
         if cth_values is not None:
             cth_values = cth_values[ind_to_take] if cth_values.size !=0 else None
-            dd_cth = dd_cth[ind_to_take] if dd_cth is not None and dd_cth.size !=0 else None
-            dd_cth_std = dd_cth_std[ind_to_take] if dd_cth_std is not None and dd_cth_std.size !=0 else None
+            val_cth = val_cth[ind_to_take] if val_cth is not None and val_cth.size !=0 else None
+            val_cth_std = val_cth_std[ind_to_take] if val_cth_std is not None and val_cth_std.size !=0 else None
         cloud_lat = cloud_lat[ind_to_take]
         cloud_lon = cloud_lon[ind_to_take]
-        return cot_values, ctp_values, ctt_values, cth_values, cloud_lat, cloud_lon, pixel_area_non_agg, dd_cth, dd_cth_std
+        return cot_values, ctp_values, ctt_values, cth_values, cloud_lat, cloud_lon, pixel_area_non_agg, val_cth, val_cth_std
 
     def update_status(self, time: dt.datetime, cloud_values: np.array, cot_values, ctp_values, ctt_values, cloud_lat, cloud_lon, pixel_area_non_agg, pixel_area_agg, 
-                      #For validation with DARDAR
-                      dd_cph=None, dd_cth=None, dd_cth_std=None, claas_cth_values=None):
+                      #For validation with validation satellite
+                      val_cph=None, val_cth=None, val_cth_std=None, claas_cth_values=None, is_input_agg = False):
         """
         Main function of the class. This is executed each timestep the cloud is present.
         Data about the cloud top pixels is passed and the cloud properties and time series are updated.
@@ -242,7 +242,7 @@ class Cloud:
         
         ## Aggregated pixels may cover NaN (e.g. outside the globe) in the original resolution.
         ## We filter those using check_non_agg_values
-        cot_values, ctp_values, ctt_values, claas_cth_values, cloud_lat, cloud_lon, pixel_area_non_agg, dd_cth, dd_cth_std = self.check_non_agg_values(cot_values, ctp_values, ctt_values, claas_cth_values, cloud_lat, cloud_lon, pixel_area_non_agg, dd_cth, dd_cth_std)
+        cot_values, ctp_values, ctt_values, claas_cth_values, cloud_lat, cloud_lon, pixel_area_non_agg, val_cth, val_cth_std = self.check_non_agg_values(cot_values, ctp_values, ctt_values, claas_cth_values, cloud_lat, cloud_lon, pixel_area_non_agg, val_cth, val_cth_std)
         if self.deactivate_cloud:
             return
         cloud_size_px = cloud_values.shape[0]
@@ -297,9 +297,12 @@ class Cloud:
             #         np.cos(np.deg2rad(cloud_lat))*111.321*111.111)
             # else:
             cloud_size_km = pixel_area_non_agg.sum()
+            area_threshold=66
+            if is_input_agg:
+                area_threshold=area_threshold*self.agg_fact**2
             large_pixel_frac = np.count_nonzero(
-                pixel_area_non_agg > 66)/pixel_area_non_agg.shape[0]
-            if large_pixel_frac > 0.1 or pixel_area_non_agg.max() > 110:
+                pixel_area_non_agg > area_threshold)/pixel_area_non_agg.shape[0]
+            if large_pixel_frac > 0.1 or pixel_area_non_agg.max() > area_threshold*2:
                 self.large_pixel_cloud = True
             self.cloud_size_km_list.append(cloud_size_km)
             self.max_size_km = max(self.max_size_km, cloud_size_km)
@@ -344,79 +347,79 @@ class Cloud:
                 self.update_ctt_variables(ctt_values, pixel_area_non_agg)
             if claas_cth_values is not None:
                 self.update_cth_variables(claas_cth_values, pixel_area_non_agg)
-            # dd_cph, dd_cth, dd_cth_std = self.dardar_get_valid_values(dd_cph, dd_cth, dd_cth_std)
-            if dd_cph is not None or dd_cth is not None or dd_cth_std is not None:
-                self.update_dardar_variables(dd_cph,dd_cth,dd_cth_std, cloud_values,claas_cth_values, cloud_lat)
+            # val_cph, val_cth, val_cth_std = self.validation_get_valid_values(val_cph, val_cth, val_cth_std)
+            if val_cph is not None or val_cth is not None or val_cth_std is not None:
+                self.update_validation_variables(val_cph,val_cth,val_cth_std, cloud_values,claas_cth_values, cloud_lat)
             
-    def update_dardar_variables(self, dd_cph,dd_cth,dd_cth_std, cloud_values, claas_cth_values, cloud_lat):
-        self.update_dardar_cph( dd_cph, cloud_values, cloud_lat)
-        self.update_dardar_cth( dd_cth, claas_cth_values)
+    def update_validation_variables(self, val_cph,val_cth,val_cth_std, cloud_values, claas_cth_values, cloud_lat):
+        self.update_validation_cph( val_cph, cloud_values, cloud_lat)
+        self.update_validation_cth( val_cth, claas_cth_values)
         
-    def update_dardar_cph(self, dd_cph, cloud_values, cloud_lat ):
-        if dd_cph.size > 0:
+    def update_validation_cph(self, val_cph, cloud_values, cloud_lat ):
+        if val_cph.size > 0:
             # 0.99 is 1 with accounting for floating point errors
-            dd_cloudy_pixels = dd_cph >= 0.99
-            dd_valid_pixels = dd_cph >= 0
-            dd_cph_cloudy = dd_cph[dd_cloudy_pixels]-1
+            val_cloudy_pixels = val_cph >= 0.99
+            val_valid_pixels = val_cph >= 0
+            val_cph_cloudy = val_cph[val_cloudy_pixels]-1
             
-            if dd_cph_cloudy.size > 0:
-                # print("Checking dardar cloud")
-                if dd_valid_pixels.shape!=cloud_values.shape:
-                    raise Exception(f"Mismatch between dardar values size and cloud values size dd_cloudy_pixels:\n {dd_cloudy_pixels}\n cloud_values: {cloud_values}\n cloud lat {cloud_lat}")
-                dd_pixel_IF_claas_measurement = cloud_values[dd_cloudy_pixels].mean()-1
-                dd_pixel_IF_claas_std = (cloud_values[dd_cloudy_pixels]-1).std()
-                dd_cph_mean = dd_cph_cloudy.mean()
-                self.dd_cph_list.append(dd_cph_mean)
-                self.dd_cph_deviation.append(dd_pixel_IF_claas_measurement - dd_cph_mean)
-                self.dd_cph_std_list.append(dd_cph_cloudy.std())
-                self.dd_pix_claas_cph_meas.append(dd_pixel_IF_claas_measurement)
-                self.dd_pix_claas_cph_std.append(dd_pixel_IF_claas_std)
+            if val_cph_cloudy.size > 0:
+                # print("Checking validation cloud")
+                if val_valid_pixels.shape!=cloud_values.shape:
+                    raise Exception(f"Mismatch between validation values size and cloud values size val_cloudy_pixels:\n {val_cloudy_pixels}\n cloud_values: {cloud_values}\n cloud lat {cloud_lat}")
+                val_pixel_IF_claas_measurement = cloud_values[val_cloudy_pixels].mean()-1
+                val_pixel_IF_claas_std = (cloud_values[val_cloudy_pixels]-1).std()
+                val_cph_mean = val_cph_cloudy.mean()
+                self.val_cph_list.append(val_cph_mean)
+                self.val_cph_deviation.append(val_pixel_IF_claas_measurement - val_cph_mean)
+                self.val_cph_std_list.append(val_cph_cloudy.std())
+                self.val_pix_claas_cph_meas.append(val_pixel_IF_claas_measurement)
+                self.val_pix_claas_cph_std.append(val_pixel_IF_claas_std)
             else:
                 # in case there are no cloudy pixels
-                self.dd_cph_list.append(-1)
-                self.dd_cph_deviation.append(-99)
-                self.dd_cph_std_list.append(-1)
-                self.dd_pix_claas_cph_meas.append(-1)
-                self.dd_pix_claas_cph_std.append(-1)
+                self.val_cph_list.append(-1)
+                self.val_cph_deviation.append(-99)
+                self.val_cph_std_list.append(-1)
+                self.val_pix_claas_cph_meas.append(-1)
+                self.val_pix_claas_cph_std.append(-1)
         else:
-            self.dd_cph_list.append(np.nan)
-            self.dd_cph_deviation.append(np.nan)
-            self.dd_cph_std_list.append(np.nan)
-            self.dd_pix_claas_cph_meas.append(np.nan)
-            self.dd_pix_claas_cph_std.append(np.nan)
+            self.val_cph_list.append(np.nan)
+            self.val_cph_deviation.append(np.nan)
+            self.val_cph_std_list.append(np.nan)
+            self.val_pix_claas_cph_meas.append(np.nan)
+            self.val_pix_claas_cph_std.append(np.nan)
 
-    def update_dardar_cth(self, dd_cth ,claas_cth_values):
-        if dd_cth.size > 0:
+    def update_validation_cth(self, val_cth ,claas_cth_values):
+        if val_cth.size > 0:
             # 0.99 is 1 with accounting for floating point errors
-            dd_cloudy_pixels = dd_cth > 0
-            dd_cth_cloudy = dd_cth[dd_cloudy_pixels]
-            dd_cth_cloudy=dd_cth_cloudy*1000 # convert to m
+            val_cloudy_pixels = val_cth > 0
+            val_cth_cloudy = val_cth[val_cloudy_pixels]
+            val_cth_cloudy=val_cth_cloudy*1000 # convert to m
 
-            if dd_cth_cloudy.size > 0:
-                # print("Checking dardar cloud")
-                # if dd_valid_pixels.shape!=cloud_values.shape:
-                #     raise Exception(f"Mismatch between dardar values size and cloud values size dd_cloudy_pixels:\n {dd_cloudy_pixels}\n cloud_values: {cloud_values}\n cloud lat {cloud_lat}")
-                dd_pixel_cth_claas_measurement = claas_cth_values[dd_cloudy_pixels].mean()
-                dd_pixel_cth_claas_std = (claas_cth_values[dd_cloudy_pixels]).std()
-                dd_cth_mean = dd_cth_cloudy.mean()
-                self.dd_cth_list.append(dd_cth_mean)
-                self.dd_cth_deviation.append(dd_pixel_cth_claas_measurement - dd_cth_mean)
-                self.dd_cth_std_list.append(dd_cth_cloudy.std())
-                self.dd_pix_claas_cth_meas.append(dd_pixel_cth_claas_measurement)
-                self.dd_pix_claas_cth_std.append(dd_pixel_cth_claas_std)
+            if val_cth_cloudy.size > 0:
+                # print("Checking validation cloud")
+                # if val_valid_pixels.shape!=cloud_values.shape:
+                #     raise Exception(f"Mismatch between validation values size and cloud values size val_cloudy_pixels:\n {val_cloudy_pixels}\n cloud_values: {cloud_values}\n cloud lat {cloud_lat}")
+                val_pixel_cth_claas_measurement = claas_cth_values[val_cloudy_pixels].mean()
+                val_pixel_cth_claas_std = (claas_cth_values[val_cloudy_pixels]).std()
+                val_cth_mean = val_cth_cloudy.mean()
+                self.val_cth_list.append(val_cth_mean)
+                self.val_cth_deviation.append(val_pixel_cth_claas_measurement - val_cth_mean)
+                self.val_cth_std_list.append(val_cth_cloudy.std())
+                self.val_pix_claas_cth_meas.append(val_pixel_cth_claas_measurement)
+                self.val_pix_claas_cth_std.append(val_pixel_cth_claas_std)
             else:
                 # in case there are no cloudy pixels
-                self.dd_cth_list.append(-1)
-                self.dd_cth_deviation.append(-99)
-                self.dd_cth_std_list.append(-1)
-                self.dd_pix_claas_cth_meas.append(-1)
-                self.dd_pix_claas_cth_std.append(-1)
+                self.val_cth_list.append(-1)
+                self.val_cth_deviation.append(-99)
+                self.val_cth_std_list.append(-1)
+                self.val_pix_claas_cth_meas.append(-1)
+                self.val_pix_claas_cth_std.append(-1)
         else:
-            self.dd_cth_list.append(np.nan)
-            self.dd_cth_deviation.append(np.nan)
-            self.dd_cth_std_list.append(np.nan)
-            self.dd_pix_claas_cth_meas.append(np.nan)
-            self.dd_pix_claas_cth_std.append(np.nan)
+            self.val_cth_list.append(np.nan)
+            self.val_cth_deviation.append(np.nan)
+            self.val_cth_std_list.append(np.nan)
+            self.val_pix_claas_cth_meas.append(np.nan)
+            self.val_pix_claas_cth_std.append(np.nan)
 
     def update_cth_variables(self, cth_values, pixel_area_non_agg):
         cth_nan_frac = np.count_nonzero(
