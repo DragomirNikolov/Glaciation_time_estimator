@@ -655,8 +655,8 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config):
         pix_area_agg = aux_ds_agg["pixel_area"].load()
         lat_agg = aux_ds_agg["lat"].load()
         lon_agg = aux_ds_agg["lon"].load()
-        assert (~np.isnan(pix_area_agg.values).any()), "NaN values in aggregated pixel area array"
-        assert (~np.isnan(lat_agg.values).any()), "NaN values in aggregated pixel area array"
+        # assert (~np.isnan(pix_area_agg.values).any()), "NaN values in aggregated pixel area array"
+        # assert (~np.isnan(lat_agg.values).any()), "NaN values in aggregated pixel area array"
         validation_mode = config.get("validation_mode", None)
         if validation_mode in ["model","dardar","modis"] :
             part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,

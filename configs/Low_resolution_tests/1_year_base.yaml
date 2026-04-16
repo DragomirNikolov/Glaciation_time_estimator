@@ -44,8 +44,8 @@ aux_fps:
 
 aux_fps_agg:
   {
-    "np": "/nfs/n2o/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_np.nc",
-    "sp": "/nfs/n2o/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_sp.nc",
+    "np": "/nfs/n2o/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/Agg_30/agg_30_pixel_area_np.nc",
+    "sp": "/nfs/n2o/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/Agg_30/agg_30_pixel_area_sp.nc",
   }  
 
 #Location of the files used for the temporary grid when resampling is turned off

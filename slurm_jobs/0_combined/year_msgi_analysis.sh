@@ -33,6 +33,18 @@
 #   -p /cluster/work/climate/dnikolo/MSGI/configs/testing/nudged_3y.yaml \
 #   -y 2008
 
+# bash /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/slurm_jobs/0_combined/Complete_analysis_config_list.sh \
+#   -w 10 \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/04_01.yaml \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/04_02.yaml \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/03_02.yaml \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/05_01.yaml \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/05_02.yaml \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/06_01.yaml \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/08_02.yaml \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/09_01.yaml \
+#   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Low_resolution_tests/Agg_30/2008_tracking/09_02.yaml
+
 while getopts 'y:w:p:' flag; do
     case "${flag}" in
         y) YEAR=${OPTARG} ;;

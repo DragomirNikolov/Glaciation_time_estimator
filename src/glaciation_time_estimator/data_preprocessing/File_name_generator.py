@@ -145,8 +145,6 @@ class MissingFilesSearcher:
             else:
                 self.resample_result_names = np.char.replace(
                         self.agg_result_names, f"Agg_{self.agg_fact:02}", "Agg_01")
-            ind_to_agg = self.are_missing(self.resample_result_names)
-            self.resample_result_names =  self.resample_result_names[ind_to_agg]
             # print(ind_to_resample)
             if (self.start_time < self.boundary_date) & (self.end_time < self.boundary_date):
                 self.cpp_files_to_resample = np.array(self.gen_filename_list(
@@ -163,6 +161,10 @@ class MissingFilesSearcher:
                     cpp_fp_format, ind_to_resample)[self.resample_ind][ind_to_resample]
                 self.ctx_files_to_resample = self.cross_bound_date_name_generator(
                     ctx_fp_format, ind_to_resample)[self.resample_ind][ind_to_resample]
+            ind_to_agg = self.are_missing(self.resample_result_names)
+            self.resample_result_names =  self.resample_result_names[ind_to_agg]
+            self.cpp_files_to_resample =  self.cpp_files_to_resample[ind_to_agg]
+            self.ctx_files_to_resample =  self.ctx_files_to_resample[ind_to_agg]
 
     def cross_bound_date_name_generator(self, fp_format_list, ind_to_resample):
         result = []
