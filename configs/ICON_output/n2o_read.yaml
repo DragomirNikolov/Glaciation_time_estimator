@@ -3,8 +3,8 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20070515_1500"
-end_time: "20070601_0000"
+start_time: "20070101_0000"
+end_time: "20070115_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
@@ -23,7 +23,7 @@ n_month_parts: 2
 #      02_<n_month_parts>.yaml
 #      ...
 #      12_<n_month_parts>.yaml
-yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs"
+yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/nudged_3y"
 
 ########################
 # Data structure and location
@@ -32,7 +32,7 @@ yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimat
 # Check wether the file is split in two folders for the hemispheres (poles)
 pole_split: True
 # Name of said folders
-pole_folders: ["np", "sp"]
+pole_folders: ["np","sp"]
 # Boundary date for the CLAAS-3 data
 struct_boundary_date: "20210101_0000"
 
@@ -45,8 +45,8 @@ aux_fps:
 
 aux_fps_agg:
   {
-    "np": "/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
-    "sp": "/wolke_scratch/dnikolo/processed_daily/sp/aggreagated_aux_file.nc",
+    "np": "/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_np.nc",
+    "sp": "/wolke_scratch/dnikolo/Glaciation_time_estimator/grids/agg_pixel_area_sp.nc"
   }  
 
 #Location of the files used for the temporary grid when resampling is turned off
@@ -63,9 +63,9 @@ grid_fps:
 #        .../{pole_folders[1]}/YYYY/MM/DD
 #        etc.
 # The analized time period shuld be available in both hemispheres for the program to work
-CLAAS_fp: "/wolke_scratch/dnikolo/CLAAS_Data/"
+CLAAS_fp: "/wolke_scratch/dnikolo/ICON_Data/nudged_3y/CT_data"
 # Folder where the netcdf cloud tracking location files are stored
-job_output_fp: "eu:/cluster/work/climate/dnikolo/Job_output/"
+job_output_fp: "/wolke_scratch/dnikolo/ICON_Data/nudged_3y/job_output"
 
 ###############
 # Preprocessing settings
@@ -75,7 +75,7 @@ job_output_fp: "eu:/cluster/work/climate/dnikolo/Job_output/"
 # Reccomended - Resample: False. No claims are made about the functtioning and accuracy of the resampled outputs
 Resample: False
 # The program aggregates the file in a agg_fact x agg_fact squares as explained in the documentation
-# Reccomended - agg_fact: 3
+# Reccomended - agg_fact: 3 Validation mode model works only with 3
 agg_fact: 3
 # Total number of cores working on the preprocessing
 # To turn multiprocessing off set this to 1
@@ -94,7 +94,7 @@ postprocessing_fast_mode: False
 fast_mode_arr_size: 20000
 
 # Folder to output the cloud and glaciation properties parquet (and CSV) files
-postprocessing_output_dir: "/wolke_scratch/dnikolo/GTE_Results/"
+postprocessing_output_dir: "/wolke_scratch/dnikolo/ICON_Data/nudged_3y/postprocessing_output"
 #Format of the postprocessing_output_dir subfolder name in which the outputs from a given run are stored
 time_folder_format: "%Y%m%d.%H%M"
 
@@ -110,3 +110,4 @@ collect_additional_properties: True
 Global_sqrt_mse: 0.05628526744657018
 glac_threshold: 0.4
 
+validation_mode: "model"
