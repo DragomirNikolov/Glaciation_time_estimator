@@ -145,6 +145,7 @@ class MissingFilesSearcher:
             else:
                 self.resample_result_names = np.char.replace(
                         self.agg_result_names, f"Agg_{self.agg_fact:02}", "Agg_01")
+            self.agg_target_names = self.resample_result_names.copy()
             # print(ind_to_resample)
             if (self.start_time < self.boundary_date) & (self.end_time < self.boundary_date):
                 self.cpp_files_to_resample = np.array(self.gen_filename_list(
@@ -196,6 +197,7 @@ class MissingFilesSearcher:
                 self.result_dict[pole]["resample_CPP"] = self.cpp_files_to_resample
                 self.result_dict[pole]["resample_CTX"] = self.ctx_files_to_resample
                 self.result_dict[pole]["resample_res"] = self.resample_result_names
+                self.result_dict[pole]["agg_target"] = self.agg_target_names
                 self.result_dict[pole]["agg_res"] = self.agg_result_names
                 self.result_dict[pole]["filter"] = self.filenames_to_filter
 
