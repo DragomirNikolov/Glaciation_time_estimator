@@ -28,10 +28,6 @@
 #   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/nudged_3y/2007_tracking/12_01.yaml \
 #   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/nudged_3y/2007_tracking/12_02.yaml
 
-# bash /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/slurm_jobs/0_combined/year_msgi_analysis.sh \
-#   -w 10 \
-#   -p /cluster/work/climate/dnikolo/MSGI/configs/testing/nudged_3y.yaml \
-#   -y 2008
 
 while getopts 'y:w:p:' flag; do
     case "${flag}" in
@@ -59,7 +55,7 @@ config_list=()
 for i in {1..12}; do
     for j in {1..2}; do
         config_list+=(
-            -c "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/nudged_3y/${YEAR}_tracking/$(printf "%02d" "$i")_$(printf "%02d" "$j").yaml"
+            -c "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/nudged_wbf_v2_1y/${YEAR}_tracking/$(printf "%02d" "$i")_$(printf "%02d" "$j").yaml"
         )
     done
 done

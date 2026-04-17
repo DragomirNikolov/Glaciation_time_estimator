@@ -36,7 +36,7 @@ for MONTH in {01..12}; do
         else
             # compute how many minutes to wait
             delay_minutes=$(( ((10#$MONTH - 1) / 4) * wait_time ))
-            preproc_id=$(sbatch --parsable --dependency=afterok:62596312 --begin=now+${delay_minutes}minutes -J "${YEAR}_${MONTH}_${part}_preproc" "${GTE_DIR}slurm_jobs/1_preprocessing/preproc_job.bsub" -c $CONFIG_FILE)
+            preproc_id=$(sbatch --parsable --begin=now+${delay_minutes}minutes -J "${YEAR}_${MONTH}_${part}_preproc" "${GTE_DIR}slurm_jobs/1_preprocessing/preproc_job.bsub" -c $CONFIG_FILE)
         fi
         # Run tracking and post-processing job for the current part of month
         raw=$(bash "${GTE_DIR}slurm_jobs/0_combined/All_t_tracking_and_post.sh" -c $CONFIG_FILE -d $preproc_id -y $YEAR)

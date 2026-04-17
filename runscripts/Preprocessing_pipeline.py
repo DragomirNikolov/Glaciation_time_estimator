@@ -154,14 +154,14 @@ def resample_folder(folder_fp_ind, aux_data, agg_fact, folder_fps_CTX, folder_fp
 
 
 # Aggregation using cdo
-def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, agg_fact, n_threads=8):
+def aggregte_folder(folder_fp_ind, folder_agg_target_fps, folder_agg_res_fps, agg_fact, n_threads=8):
     agg_start_time = time.time()
     sem = threading.Semaphore(n_threads)   # pick a threshold here
-    resample_res_fps = folder_resample_res_fps[folder_fp_ind]
+    agg_target_fps = folder_agg_target_fps[folder_fp_ind]
     agg_res_fps = folder_agg_res_fps[folder_fp_ind]
     Ts = []
-    for filename_ind in range(len(resample_res_fps)):
-        resample_res_file = resample_res_fps[filename_ind]
+    for filename_ind in range(len(agg_target_fps)):
+        resample_res_file = agg_target_fps[filename_ind]
         resample_res_mean = resample_res_file.removesuffix(".nc")+"_mean.nc"
         resample_res_median = resample_res_file.removesuffix(
             ".nc")+"_median.nc"
@@ -189,7 +189,7 @@ def aggregte_folder(folder_fp_ind, folder_resample_res_fps, folder_agg_res_fps, 
         T.join()
     agg_end_time = time.time()
     print(
-        f"Aggregated day {folder_fp_ind}/{len(folder_resample_res_fps)} in {round(agg_end_time - agg_start_time,2)}s\nStarting with {agg_res_fps[0]}")
+        f"Aggregated day {folder_fp_ind}/{len(folder_agg_res_fps)} in {round(agg_end_time - agg_start_time,2)}s\nStarting with {agg_res_fps[0]}")
 
 
 def filter_folder(day_fp_to_filter, temp_bounds, agg_fact, do_resampling, n_threads=8):
@@ -221,6 +221,8 @@ def prepare_pole(pole, target_filenames, config, n_workers):
     folder_fps_CPP = fps_by_folder(target_filenames[pole]["resample_CPP"])
     folder_resample_res_fps = fps_by_folder(
         target_filenames[pole]["resample_res"])
+    folder_agg_target_fps = fps_by_folder(
+        target_filenames[pole]["agg_target"])
     folder_agg_res_fps = fps_by_folder(
         target_filenames[pole]["agg_res"])
     # print(target_filenames[pole])
@@ -240,25 +242,26 @@ def prepare_pole(pole, target_filenames, config, n_workers):
         preparation_worker = partial(format_folder, folder_fps_CTX=folder_fps_CTX,
                                      folder_fps_CPP=folder_fps_CPP, folder_resample_res_fps=folder_resample_res_fps, grid_fp=config["grid_fps"][pole], n_threads=n_threads)
 
-    aggregation_worker = partial(aggregte_folder, folder_resample_res_fps=folder_resample_res_fps,
+    aggregation_worker = partial(aggregte_folder, folder_agg_target_fps=folder_agg_target_fps,
                                  folder_agg_res_fps=folder_agg_res_fps, agg_fact=agg_fact, n_threads=n_threads)
 
-    ind_to_iterate = range(len(folder_fps_CTX))
+    ind_to_iterate_prep = range(len(folder_fps_CTX))
+    ind_to_iterate_agg = range(len(folder_agg_res_fps))
     if n_workers > 1:
         pole_pool = Pool(n_workers)
-        pole_pool.map(preparation_worker, ind_to_iterate)
+        pole_pool.map(preparation_worker, ind_to_iterate_prep)
         pole_pool.close()
         pole_pool.join()
         pole_pool = Pool(n_workers)
-        pole_pool.map(aggregation_worker, ind_to_iterate)
+        pole_pool.map(aggregation_worker, ind_to_iterate_agg)
         pole_pool.close()
         pole_pool.join()
 
     elif n_workers == 1:
         warnings.warn("Working without multiprocessing")
-        for ind in ind_to_iterate:
+        for ind in ind_to_iterate_prep:
             preparation_worker(ind)
-        for ind in ind_to_iterate:
+        for ind in ind_to_iterate_agg:
             aggregation_worker(ind)
     if config["Resample"]:
         aux_data.close()
