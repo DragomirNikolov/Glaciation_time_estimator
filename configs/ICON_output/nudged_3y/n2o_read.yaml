@@ -23,7 +23,7 @@ n_month_parts: 2
 #      02_<n_month_parts>.yaml
 #      ...
 #      12_<n_month_parts>.yaml
-yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/nudged_3y"
+yearly_config_folder: "/wolke_scratch/dnikolo/Glaciation_time_estimator/configs/ICON_output/nudged_3y"
 
 ########################
 # Data structure and location
