@@ -189,7 +189,7 @@ def aggregte_folder(folder_fp_ind, folder_agg_target_fps, folder_agg_res_fps, ag
         T.join()
     agg_end_time = time.time()
     print(
-        f"Aggregated day {folder_fp_ind}/{len(folder_resample_res_fps)} in {round(agg_end_time - agg_start_time,2)}s\nStarting with {agg_res_fps[0]}")
+        f"Aggregated day {folder_fp_ind}/{len(folder_agg_res_fps)} in {round(agg_end_time - agg_start_time,2)}s\nStarting with {agg_res_fps[0]}")
 
 
 def filter_folder(day_fp_to_filter, temp_bounds, agg_fact, do_resampling, n_threads=8):
