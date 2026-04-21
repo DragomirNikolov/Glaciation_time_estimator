@@ -55,7 +55,7 @@ config_list=()
 for i in {1..12}; do
     for j in {1..2}; do
         config_list+=(
-            -c "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/nudged_wbf_v2_1y/${YEAR}_tracking/$(printf "%02d" "$i")_$(printf "%02d" "$j").yaml"
+            -c "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/wbf_v1_ndg_1y/${YEAR}_tracking/$(printf "%02d" "$i")_$(printf "%02d" "$j").yaml"
         )
     done
 done
