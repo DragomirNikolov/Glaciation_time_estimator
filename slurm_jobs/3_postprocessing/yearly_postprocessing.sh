@@ -18,9 +18,9 @@ fi
 
 postproc_job_ids=()
 
-for MONTH in {01..06}; do
+for MONTH in {01..12}; do
     for part in 01 02; do
-        CONFIG_FILE="${GTE_DIR}/configs/Validation_MODIS/${YEAR}_tracking/${MONTH}_${part}.yaml"
+        CONFIG_FILE="${GTE_DIR}/configs/Validation_DARDAR/bulk_output/${YEAR}_tracking/${MONTH}_${part}.yaml"
 
         if [ ! -f "$CONFIG_FILE" ]; then
             echo "Warning: Config file not found: $CONFIG_FILE. Skipping."
@@ -33,14 +33,14 @@ for MONTH in {01..06}; do
         echo "Submitting post-processing job for $CONFIG_FILE"
 
         if [ -z "$wait_time" ]; then
-            # postproc_job_id=$(sbatch --parsable \
-            #     -J "$postproc_name" \
-            #     "${GTE_DIR}slurm_jobs/3_postprocessing/postproc_job.bsub" \
-            #     -c "$CONFIG_FILE")
-            postproc_job_id=$(sbatch --parsable  \
+            postproc_job_id=$(sbatch --parsable \
                 -J "$postproc_name" \
-                "${GTE_DIR}slurm_jobs/3_postprocessing/glaciation_detection.bsub" \
+                "${GTE_DIR}slurm_jobs/3_postprocessing/postproc_job.bsub" \
                 -c "$CONFIG_FILE")
+            # postproc_job_id=$(sbatch --parsable  \
+            #     -J "$postproc_name" \
+            #     "${GTE_DIR}slurm_jobs/3_postprocessing/glaciation_detection.bsub" \
+            #     -c "$CONFIG_FILE")
         else
             delay_minutes=$(( (10#$MONTH / 4) * wait_time ))
             postproc_job_id=$(sbatch --parsable \
@@ -48,11 +48,11 @@ for MONTH in {01..06}; do
                 -J "$postproc_name" \
                 "${GTE_DIR}slurm_jobs/3_postprocessing/postproc_job.bsub" \
                 -c "$CONFIG_FILE")
-            postproc_job_id=$(sbatch --parsable \
-                --begin=now+${delay_minutes}minutes \
-                -J "$postproc_name" \
-                "${GTE_DIR}slurm_jobs/3_postprocessing/glaciation_detection.bsub" \
-                -c "$CONFIG_FILE")
+            # postproc_job_id=$(sbatch --parsable \
+            #     --begin=now+${delay_minutes}minutes \
+            #     -J "$postproc_name" \
+            #     "${GTE_DIR}slurm_jobs/3_postprocessing/glaciation_detection.bsub" \
+            #     -c "$CONFIG_FILE")
         fi
 
         if [ -n "$postproc_job_id" ]; then
@@ -65,7 +65,7 @@ for MONTH in {01..06}; do
 done
 
 glac_name="${YEAR}_glac"
-GTE_CONFIG_DIR="${GTE_DIR}/configs/${YEAR}_tracking/01_01.yaml"
+GTE_CONFIG_DIR="${GTE_DIR}/configs/Validation_DARDAR/bulk_output/${YEAR}_tracking/01_01.yaml"
 
 if [ ${#postproc_job_ids[@]} -gt 0 ]; then
     dependency_list=$(IFS=,; echo "${postproc_job_ids[*]}")

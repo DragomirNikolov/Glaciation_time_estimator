@@ -4,8 +4,8 @@
 #SBATCH -N 1
 #SBATCH -n 8
 #SBATCH -q debug
-#SBATCH --mem-per-cpu=12096
-#SBATCH --tmp=50240
+#SBATCH --mem-per-cpu=20096
+#SBATCH --tmp=60240
 #SBATCH --mail-type=FAIL
 #SBATCH --output=/cluster/work/climate/dnikolo/Job_output/Output/%x.%j.out
 #SBATCH --error=/cluster/work/climate/dnikolo/Job_output/Error/%x.%j.err

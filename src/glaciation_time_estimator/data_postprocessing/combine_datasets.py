@@ -413,12 +413,19 @@ def combine_whole_year(config):
     analysis_df_list = []
     months=[month for month in range(1,13)]
     for month in months:
+       
         n_parts = config.get('n_month_parts',2)
         df_next = None
         config_fp_next = None
 
         # Specific case used due to computational constrains in paper preparation. Feel free to disregard
         for part in range(1,n_parts+1):
+            if month == 4 and part == 2:
+                print("WARNING a 04_02 is getting skipped intentionally")
+                continue
+            # if month == 2 and part == 2:
+            #     print("WARNING a 02_02 is getting skipped intentionally")
+            #     continue
             print(f"Analysing {year}_tracking/{month:02}_{part:02}.yaml")
             if config.get('Analyze_year',False):
                 config_fp = os.path.join(config["yearly_config_folder"],f'{year}_tracking',f'{month:02}_{part:02}.yaml')

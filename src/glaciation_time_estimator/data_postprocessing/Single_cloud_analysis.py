@@ -109,6 +109,8 @@ class Cloud:
         self.val_cth_std_list = []
         self.val_pix_claas_cth_meas = []
         self.val_pix_claas_cth_std = []
+        self.val_intersec_lon = []
+        self.val_intersec_lat = []
         
         self.val_cth_std_list = []
 
@@ -250,6 +252,8 @@ class Cloud:
 
         # We calculated weighted average position of the cloud in latitude and longitude
         if not self.is_resampled:
+            cloud_lat_px = cloud_lat.copy()
+            cloud_lon_px = cloud_lon.copy()
             cloud_lat = np.average(cloud_lat, weights=pixel_area_non_agg)
             cloud_lon = np.average(cloud_lon, weights=pixel_area_non_agg)
             # cloud_lat = 10
@@ -349,13 +353,13 @@ class Cloud:
                 self.update_cth_variables(claas_cth_values, pixel_area_non_agg)
             # val_cph, val_cth, val_cth_std = self.validation_get_valid_values(val_cph, val_cth, val_cth_std)
             if val_cph is not None or val_cth is not None or val_cth_std is not None:
-                self.update_validation_variables(val_cph,val_cth,val_cth_std, cloud_values,claas_cth_values, cloud_lat)
+                self.update_validation_variables(val_cph,val_cth,val_cth_std, cloud_values,claas_cth_values, cloud_lon_px, cloud_lat_px)
             
-    def update_validation_variables(self, val_cph,val_cth,val_cth_std, cloud_values, claas_cth_values, cloud_lat):
-        self.update_validation_cph( val_cph, cloud_values, cloud_lat)
+    def update_validation_variables(self, val_cph,val_cth,val_cth_std, cloud_values, claas_cth_values, cloud_lon_px, cloud_lat_px):
+        self.update_validation_cph( val_cph, cloud_values, cloud_lon_px,cloud_lat_px)
         self.update_validation_cth( val_cth, claas_cth_values)
         
-    def update_validation_cph(self, val_cph, cloud_values, cloud_lat ):
+    def update_validation_cph(self, val_cph, cloud_values, cloud_lon_px, cloud_lat_px ):
         if val_cph.size > 0:
             # 0.99 is 1 with accounting for floating point errors
             val_cloudy_pixels = val_cph >= 0.99
@@ -365,7 +369,7 @@ class Cloud:
             if val_cph_cloudy.size > 0:
                 # print("Checking validation cloud")
                 if val_valid_pixels.shape!=cloud_values.shape:
-                    raise Exception(f"Mismatch between validation values size and cloud values size val_cloudy_pixels:\n {val_cloudy_pixels}\n cloud_values: {cloud_values}\n cloud lat {cloud_lat}")
+                    raise Exception(f"Mismatch between validation values size and cloud values size val_cloudy_pixels:\n {val_cloudy_pixels}\n cloud_values: {cloud_values}\n cloud lat {cloud_lat_px}")
                 val_pixel_IF_claas_measurement = cloud_values[val_cloudy_pixels].mean()-1
                 val_pixel_IF_claas_std = (cloud_values[val_cloudy_pixels]-1).std()
                 val_cph_mean = val_cph_cloudy.mean()
@@ -374,6 +378,8 @@ class Cloud:
                 self.val_cph_std_list.append(val_cph_cloudy.std())
                 self.val_pix_claas_cph_meas.append(val_pixel_IF_claas_measurement)
                 self.val_pix_claas_cph_std.append(val_pixel_IF_claas_std)
+                self.val_intersec_lon.append(cloud_lon_px)
+                self.val_intersec_lat.append(cloud_lat_px)
             else:
                 # in case there are no cloudy pixels
                 self.val_cph_list.append(-1)

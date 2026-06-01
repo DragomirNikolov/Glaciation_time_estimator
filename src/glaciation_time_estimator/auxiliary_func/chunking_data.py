@@ -34,6 +34,66 @@ class ChunkLoader:
                 Analyzing files: {self.cloud_fps}\n\
                 Currently loaded: {self.loaded_key}"
      
+    def _check_cloud_coverage(self, key):
+        """
+        Check if every half-month has at least one cloud
+        in every min_temp range.
+        """
+        required_cols = {"track_start_time", "min_temp"}
+        missing_cols = required_cols - set(self.cloud_chunk.columns)
+        if missing_cols:
+            raise KeyError(f"Missing required columns for coverage check: {missing_cols}")
+
+        temp_bins = [-36, -30, -24, -18, -12, -6]
+        temp_labels = [
+            "-36 to -30",
+            "-30 to -24",
+            "-24 to -18",
+            "-18 to -12",
+            "-12 to -6",
+            "-6 to 0",
+        ]
+
+        df = self.cloud_chunk[["track_start_time", "min_temp"]].copy()
+
+        time = pd.to_datetime(df["track_start_time"])
+        df["month"] = time.dt.month
+        df["day"] = time.dt.day
+
+        df["half_month"] = df["day"].where(df["day"] <= 15, 16)
+        df["half_month"] = df["half_month"].map(
+            lambda x: "01-15" if x <= 15 else "16-end"
+        )
+
+        df["temp_range"] = pd.cut(
+            df["min_temp"],
+            bins=temp_bins,
+            labels=temp_labels,
+            include_lowest=True,
+        )
+
+        existing = set(
+            df.dropna(subset=["temp_range"])
+            .groupby(["month", "half_month", "temp_range"], observed=True)
+            .size()
+            .index
+        )
+
+        missing = []
+
+        for month in range(1, 13):
+            for half_month in ["01-15", "16-end"]:
+                for temp_range in temp_labels:
+                    if (month, half_month, temp_range) not in existing:
+                        missing.append((month, half_month, temp_range))
+
+        if missing:
+            print(f"\nMissing cloud coverage for year {key}:")
+            for month, half_month, temp_range in missing:
+                print(f"  month={month:02d}, half={half_month}, temp={temp_range}")
+        else:
+            print(f"All temp ranges covered for year {key}.")
+    
     def load_single_chunk(
         self,
         key,
@@ -68,6 +128,8 @@ class ChunkLoader:
             if self.filter:
                 self.cloud_chunk=self.cloud_chunk[~self.cloud_chunk.is_large_pix_cloud]
                 self.cloud_chunk = self.cloud_chunk[(self.cloud_chunk.avg_lat >30) | (self.cloud_chunk.avg_lat<-30)]
+
+            self._check_cloud_coverage(key)
         else:
             self.cloud_chunk = pd.DataFrame()
 
@@ -86,10 +148,13 @@ class ChunkLoader:
             if self.filter:
                 self.glac_chunk=self.glac_chunk[~self.glac_chunk.is_large_pix_cloud]
                 self.glac_chunk = self.glac_chunk[(self.glac_chunk.avg_lat >30) | (self.glac_chunk.avg_lat<-30)]
+            
+
             # Drop duplicate Cloud_IDs and mark glaciating
             self.glac_cloud_chunk = self.glac_chunk.drop_duplicates(
                 subset="Cloud_ID", keep="first"
             )
+
 
             if load_clouds:
                 # mark clouds as glaciating
