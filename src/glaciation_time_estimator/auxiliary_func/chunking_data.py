@@ -2,6 +2,7 @@ from glaciation_time_estimator.auxiliary_func.config_reader import read_config
 import pandas as pd
 from tqdm import tqdm
 import os
+from pathlib import Path
 
 
 class ChunkLoader:
@@ -58,9 +59,11 @@ class ChunkLoader:
                     ).dt.month
             else:
                 columns_to_load = set(cloud_columns)
-                columns_to_load -= columns_to_load.intersection({'Cloud_ID', 'month', 'is_large_pix_cloud','avg_lat','avg_lon'})
+                columns_to_load -= columns_to_load.intersection({'Cloud_ID', 'month', 'is_large_pix_cloud','avg_lat','avg_lon', 'track_start_time'})
+                comumns_to_load_list = list(columns_to_load)
+                comumns_to_load_list.extend(['Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon', 'track_start_time'])
                 self.cloud_chunk = pd.read_parquet(
-                    self.cloud_fps[key], columns=list(columns_to_load).extend(['Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon']))
+                    self.cloud_fps[key], columns=comumns_to_load_list)
                 if 'month' in cloud_columns:
                     self.cloud_chunk["month"] = pd.to_datetime(
                         self.cloud_chunk['track_start_time']
@@ -79,9 +82,11 @@ class ChunkLoader:
                 )
             else:
                 columns_to_load = set(glac_columns)
-                columns_to_load -= columns_to_load.intersection({'Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon'})
+                columns_to_load -= columns_to_load.intersection({'Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon', 'track_start_time'})
+                comumns_to_load_list = list(columns_to_load)
+                comumns_to_load_list.extend(['Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon', 'track_start_time'])
                 self.glac_chunk = pd.read_parquet(
-                    self.glac_fps[key], columns=list(columns_to_load).extend(['Cloud_ID', 'is_large_pix_cloud','avg_lat','avg_lon'])
+                    self.glac_fps[key], columns=comumns_to_load_list
                 )
             if self.filter:
                 self.glac_chunk=self.glac_chunk[~self.glac_chunk.is_large_pix_cloud]
@@ -97,11 +102,18 @@ class ChunkLoader:
                     self.cloud_chunk.index.isin(
                         self.glac_cloud_chunk['Cloud_ID']
                     )
+                    # self.cloud_chunk['Cloud_ID'].isin(
+                    #     self.glac_cloud_chunk['Cloud_ID']
+                    # )
                 )
+                
                 # ensure correspondence
                 assert self.glac_cloud_chunk["Cloud_ID"].isin(
                     self.cloud_chunk.index
                 ).all(), "The files don't correspond to each other"
+                # assert self.glac_cloud_chunk["Cloud_ID"].isin(
+                #     self.cloud_chunk['Cloud_ID']
+                # ).all(), "The files don't correspond to each other"
         else:
             self.glac_chunk = pd.DataFrame()
             self.glac_cloud_chunk = pd.DataFrame()
@@ -117,7 +129,8 @@ class ChunkLoader:
         """Load the next year from the years list"""
         idx = self.years.index(self.loaded_key)
         if idx+1<len(self.years):
-            self.load_single_chunk(idx+1,load_clouds,load_glac,cloud_columns,glac_columns,force_reload)
+            next_year = self.years[idx + 1]
+            self.load_single_chunk(next_year,load_clouds,load_glac,cloud_columns,glac_columns,force_reload)
         elif idx+1==len(self.years):
             print("Final chunk already loaded. No new chunk loaded")
         else:
