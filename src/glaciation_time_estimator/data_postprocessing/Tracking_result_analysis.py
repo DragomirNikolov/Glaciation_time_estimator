@@ -284,6 +284,8 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
                         # Data from claas
                         # CTH
                         "is_cth_valid_cloud", "avg_cth", "cth_hist", "cth_std_hist",  "cth_nan_frac_hist"])
+    if config["validation_mode"] == "dardar":
+        columns.extend(["val_intersec_lon","val_intersec_lat"])
     datapoints_per_cloud = len(columns)
     cloudinfo_df = pd.DataFrame(
         index=range(len(cloud_arr)), columns=columns)
@@ -349,6 +351,8 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
                         current_cloud.std_cth_list,
                         current_cloud.cth_nan_frac_list
                     ])
+                if config["validation_mode"] == "dardar":
+                    variable_list.extend([current_cloud.val_intersec_lon,current_cloud.val_intersec_lat])
                 cloudinfo_df.iloc[cloud_ind] = variable_list
 
 

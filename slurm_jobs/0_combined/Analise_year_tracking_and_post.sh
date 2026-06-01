@@ -22,13 +22,13 @@ postproc_job_ids=()
 for MONTH in {01..12}; do
     for part in 01 02; do
         # Set name of configuration file
-        CONFIG_FILE="${GTE_DIR}configs/Low_resolution_tests/Agg_30/${YEAR}_tracking/${MONTH}_${part}.yaml"
+        CONFIG_FILE="${GTE_DIR}configs/ICON_output/no_nudging/R2B5/wbf_v3/${YEAR}_tracking/${MONTH}_${part}.yaml"
         # Run tracking and post-processing job for the current part of month
         if [ -z "$wait_time" ]; then
             raw=$(bash "${GTE_DIR}slurm_jobs/0_combined/All_t_tracking_and_post.sh" -c $CONFIG_FILE -y $YEAR)
         else
             # compute how many minutes to wait
-            delay_minutes=$(( (10#$MONTH / 4) * wait_time ))
+            delay_minutes=$(( (10#$MONTH / 4) * wait_time + 180))
             raw=$(bash "${GTE_DIR}slurm_jobs/0_combined/All_t_tracking_and_post.sh" -c $CONFIG_FILE -y $YEAR -w $delay_minutes)
         fi
         # strip everything up to the last colon+space
@@ -40,7 +40,7 @@ for MONTH in {01..12}; do
     done
 done
 glac_name="${YEAR}_glac"
-GTE_CONFIG_DIR="${GTE_DIR}configs/Low_resolution_tests/Agg_30//${YEAR}_tracking/01_01.yaml"
+GTE_CONFIG_DIR="${GTE_DIR}configs/ICON_output/no_nudging/R2B5/wbf_v3/${YEAR}_tracking/01_01.yaml"
 # Submit glaciation detection job after all post-processing jobs have completed
 if [ ${#postproc_job_ids[@]} -gt 0 ]; then
     dependency_list=$(IFS=,; echo "${postproc_job_ids[*]}")
