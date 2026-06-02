@@ -45,15 +45,7 @@ class ChunkLoader:
         if missing_cols:
             raise KeyError(f"Missing required columns for coverage check: {missing_cols}")
 
-        temp_bins = [-36, -30, -24, -18, -12, -6]
-        temp_labels = [
-            "-36 to -30",
-            "-30 to -24",
-            "-24 to -18",
-            "-18 to -12",
-            "-12 to -6",
-            "-6 to 0",
-        ]
+        min_temps = [-36, -30, -24, -18, -12, -6]
 
         df = self.cloud_chunk[["track_start_time", "min_temp"]].copy()
 
@@ -66,16 +58,9 @@ class ChunkLoader:
             lambda x: "01-15" if x <= 15 else "16-end"
         )
 
-        df["temp_range"] = pd.cut(
-            df["min_temp"],
-            bins=temp_bins,
-            labels=temp_labels,
-            include_lowest=True,
-        )
-
         existing = set(
-            df.dropna(subset=["temp_range"])
-            .groupby(["month", "half_month", "temp_range"], observed=True)
+            df.dropna(subset=["min_temp"])
+            .groupby(["month", "half_month", "min_temp"], observed=True)
             .size()
             .index
         )
@@ -84,14 +69,14 @@ class ChunkLoader:
 
         for month in range(1, 13):
             for half_month in ["01-15", "16-end"]:
-                for temp_range in temp_labels:
+                for temp_range in min_temps:
                     if (month, half_month, temp_range) not in existing:
                         missing.append((month, half_month, temp_range))
 
         if missing:
             print(f"\nMissing cloud coverage for year {key}:")
-            for month, half_month, temp_range in missing:
-                print(f"  month={month:02d}, half={half_month}, temp={temp_range}")
+            for month, half_month, min_temps in missing:
+                print(f"  month={month:02d}, half={half_month}, temp={min_temps}")
         else:
             print(f"All temp ranges covered for year {key}.")
     
