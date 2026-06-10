@@ -598,6 +598,16 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                             cloud_cth_values = extract_claas_cth(cth_arr, cloud_location_ind_non_agg)
                             agg_lat_values = lat_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
                             agg_lon_values = lon_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
+                            bad_coord = ~np.isfinite(cloud_lat_values) | ~np.isfinite(cloud_lon_values)
+                            if np.any(bad_coord):
+                                print(
+                                    f"{time_str} {temp_key} track_nr - {track_number} : "
+                                    f"Non-finite cloud coordinates: {np.count_nonzero(bad_coord)} of {bad_coord.size}; "
+                                    f"Bad indices: {np.where(bad_coord)}; "
+                                    f"Bad lat values: {cloud_lat_values[bad_coord][:20]}; "
+                                    f"Bad lon values: {cloud_lon_values[bad_coord][:20]}",
+                                    flush=True,
+                                )
                             cloud_val_cph_agg, _ , _ = match_val_to_cloud(
                                 val_index,
                                 val_cph, val_cth, val_cth_std,
