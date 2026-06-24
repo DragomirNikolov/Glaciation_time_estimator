@@ -235,9 +235,12 @@ def extract_val_cords(time, config):
     elif config["validation_mode"]=="modis":
         val_filename = time.strftime(
                 "%Y/%m/%d/MOD_CT_%Y%m%d_%H%M.nc")
-    with xr.open_dataset(os.path.join(config["val_CPH_fp"], val_filename)) as val_data:
-        return val_data['lat_bin'].values, val_data['lon_bin'].values
-
+        
+    val_path = os.path.join(config["val_CPH_fp"], val_filename)
+    if not os.path.exists(val_path):
+        return None, None
+    with xr.open_dataset(val_path) as val_data:
+        return val_data["lat_bin"].values, val_data["lon_bin"].values
 
 def extract_aux_vars(aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr):
     ind1 = cloud_location_ind_non_agg[0]
@@ -464,6 +467,14 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
         lat_arr_agg = lat_agg.values if lat_agg is not None else None
         lon_arr_agg = lon_agg.values if lon_agg is not None else None
         assert lat_arr_agg is not None, "lat_arr_agg is somehow none"
+        
+        for time in basetimes:
+            if val_lon is None or val_lat is None:
+                val_lat, val_lon = extract_val_cords(time, config)
+            if (val_lon is not None) and (val_lat is not None):
+                val_index = build_val_index(val_lat, val_lon)
+                break
+            
     for fp_ind in range(len(basetimes)):
         time = basetimes[fp_ind]
         time_str = time.strftime("%Y%m%d_%H%M%S")
@@ -479,13 +490,9 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
             else:
                 cot_arr, cwp_arr = extract_cpp_vars(time, pole, config)
                 ctp_arr, ctt_arr, cth_arr = extract_ctx_vars(time, pole, config)
-
+        
         if (validation_mode == "dardar") or (validation_mode == "modis"):
-            if val_lon is None or val_lat is None:
-                val_lat, val_lon = extract_val_cords(time, config)
-                val_index = build_val_index(val_lat, val_lon)
             val_cph, val_cth, val_cth_std = extract_val_vars(time, config, val_lat, val_lon)
-
 
         cloudtrack_fp = tracking_fps[pole][temp_key]['cloudtracks'][fp_ind]
 
@@ -598,16 +605,16 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                             cloud_cth_values = extract_claas_cth(cth_arr, cloud_location_ind_non_agg)
                             agg_lat_values = lat_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
                             agg_lon_values = lon_arr_agg[aux_ind, cloud_location_ind[0].T, cloud_location_ind[1].T]
-                            bad_coord = ~np.isfinite(cloud_lat_values) | ~np.isfinite(cloud_lon_values)
-                            if np.any(bad_coord):
-                                print(
-                                    f"{time_str} {temp_key} track_nr - {track_number} : "
-                                    f"Non-finite cloud coordinates: {np.count_nonzero(bad_coord)} of {bad_coord.size}; "
-                                    f"Bad indices: {np.where(bad_coord)}; "
-                                    f"Bad lat values: {cloud_lat_values[bad_coord][:20]}; "
-                                    f"Bad lon values: {cloud_lon_values[bad_coord][:20]}",
-                                    flush=True,
-                                )
+                            # bad_coord = ~np.isfinite(cloud_lat_values) | ~np.isfinite(cloud_lon_values)
+                            # if np.any(bad_coord):
+                            #     print(
+                            #         f"{time_str} {temp_key} track_nr - {track_number} : "
+                            #         f"Non-finite cloud coordinates: {np.count_nonzero(bad_coord)} of {bad_coord.size}; "
+                            #         f"Bad indices: {np.where(bad_coord)}; "
+                            #         f"Bad lat values: {cloud_lat_values[bad_coord][:20]}; "
+                            #         f"Bad lon values: {cloud_lon_values[bad_coord][:20]}",
+                            #         flush=True,
+                            #     )
                             cloud_val_cph_agg, _ , _ = match_val_to_cloud(
                                 val_index,
                                 val_cph, val_cth, val_cth_std,

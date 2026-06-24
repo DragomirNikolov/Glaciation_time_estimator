@@ -420,8 +420,8 @@ def combine_whole_year(config):
 
         # Specific case used due to computational constrains in paper preparation. Feel free to disregard
         for part in range(1,n_parts+1):
-            if month == 4 and part == 2:
-                print("WARNING a 04_02 is getting skipped intentionally")
+            if month == 12 and part == 2:
+                print("WARNING a 12_02 is getting skipped intentionally")
                 continue
             # if month == 2 and part == 2:
             #     print("WARNING a 02_02 is getting skipped intentionally")
