@@ -85,6 +85,8 @@ class Cloud:
         self.sum_cloud_size_px = 0.0
         self.avg_cloud_size_px = None
 
+        self.cloud_size_km_list_debug = []
+
         self.valid_cot_cloud = False
         self.cot_nan_frac_list = []
 
@@ -126,7 +128,7 @@ class Cloud:
         self.agg_fact=agg_fact
 
     def __str__(self):
-        return f"{self.is_liq},{self.is_mix},{self.is_ice},"
+        return f"Cloud: {self.id}, Avg_size: {self.avg_cloud_size_km}"
     # In resampled clouds pixel area should be the area in degrees lon_resolution*lat_resolution
 
     def weighted_avg_and_std(self, values, weights):
@@ -168,7 +170,7 @@ class Cloud:
         """Check the validity of the cloud values and filter out invalid pixels. This is important to avoid errors in
         """
         ## There are certain locations where the aggregated pixel field has values below 30
-        if ((((cloud_lat<20)& (cloud_lat>0.01)) | ((cloud_lat>-20)& (cloud_lat<-0.01)))).any():
+        if ((((cloud_lat<20) & (cloud_lat>0.01)) | ((cloud_lat>-20)& (cloud_lat<-0.01)))).any():
             self.deactivate_cloud=True
             return None, None, None, None, None, None, None, None, None
         ## Aggregated pixels may cover NaN (e.g. outside the globe) in the original resolution.
@@ -309,6 +311,7 @@ class Cloud:
             if large_pixel_frac > 0.1 or pixel_area_non_agg.max() > area_threshold*2:
                 self.large_pixel_cloud = True
             self.cloud_size_km_list.append(cloud_size_km)
+            self.cloud_size_km_list_debug.append(pixel_area_non_agg.sum())
             self.max_size_km = max(self.max_size_km, cloud_size_km)
             self.min_size_km = min(self.min_size_km, cloud_size_km)
 

@@ -267,7 +267,7 @@ def extract_claas_cth(cth_arr, cloud_location_ind_non_agg):
 
 def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
     columns = ["tracknumber","is_large_pix_cloud", "is_cot_valid_cloud", "is_ctp_valid_cloud", "is_liq", "is_mix", "is_ice", "max_water_frac",
-               "max_ice_fraction", "avg_size[km]", "max_size[km]",
+               "max_ice_fraction", "avg_size[km]", "avg_size_unagg[km]", "max_size[km]",
                "min_size[km]", "avg_size[px]", "max_size[px]",
                "min_size[px]", "track_start_time", "track_length", "avg_cot", "avg_ctp", "avg_ctt",
                "glaciation_start_time", "glaciation_end_time", "avg_lat",
@@ -304,6 +304,7 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
                     current_cloud.max_water_fraction,
                     current_cloud.max_ice_fraction,
                     extract_value(current_cloud.avg_cloud_size_km),
+                    extract_value(current_cloud.avg_cloud_size_km_debug),
                     extract_value(current_cloud.max_size_km),
                     extract_value(current_cloud.min_size_km),
                     extract_value(current_cloud.avg_cloud_size_px),
@@ -604,6 +605,16 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                                 agg_lat_values, agg_lon_values,
                                 max_km=config.get("val_max_match_km", None),  # optional
                                 fill_value=np.nan
+                                )
+                            bad_coord = ~np.isfinite(cloud_lat_values) | ~np.isfinite(cloud_lon_values)
+                            if np.any(bad_coord):
+                                print(
+                                    f"{time_str} {temp_key} track_nr - {track_number} : "
+                                    f"Non-finite cloud coordinates: {np.count_nonzero(bad_coord)} of {bad_coord.size}; "
+                                    f"Bad indices: {np.where(bad_coord)}; "
+                                    f"Bad lat values: {cloud_lat_values[bad_coord][:20]}; "
+                                    f"Bad lon values: {cloud_lon_values[bad_coord][:20]}",
+                                    flush=True,
                                 )
                             _ , cloud_val_cth_non_agg, cloud_val_cth_std_non_agg = match_val_to_cloud(
                                 val_index,
