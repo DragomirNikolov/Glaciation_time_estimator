@@ -62,7 +62,7 @@ done
 postproc_name="${config_name::-5}_${YEAR}_postproc"
 # Submit post-processing job after all jobs have completed
 if [ ${#job_ids[@]} -gt 0 ]; then
-    dependency_list=$(IFS=,; echo "${job_ids[*]}")
+    dependency_list=$(IFS=:; echo "${job_ids[*]}")
     postproc_job_id=$(sbatch --parsable --dependency=afterok:$dependency_list -J "$postproc_name" "$GTE_DIR"slurm_jobs/3_postprocessing/postproc_job.bsub -c $GTE_CONFIG_DIR)
     echo "Post-processing job submitted with ID: $postproc_job_id"
     # postproc_job_id=$(sbatch --parsable --dependency=afterok:$postproc_job_id -J "$postproc_name" "$GTE_DIR"slurm_jobs/3_postprocessing/postproc_job.bsub -c $GTE_CONFIG_DIR)
