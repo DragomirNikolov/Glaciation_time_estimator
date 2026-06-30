@@ -311,7 +311,7 @@ class Cloud:
             if large_pixel_frac > 0.1 or pixel_area_non_agg.max() > area_threshold*2:
                 self.large_pixel_cloud = True
             self.cloud_size_km_list.append(cloud_size_km)
-            self.cloud_size_km_list_debug.append(pixel_area_non_agg.sum())
+            self.cloud_size_km_list_debug.append(pixel_area_agg.sum())
             self.max_size_km = max(self.max_size_km, cloud_size_km)
             self.min_size_km = min(self.min_size_km, cloud_size_km)
 
