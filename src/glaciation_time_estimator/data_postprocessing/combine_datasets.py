@@ -89,8 +89,12 @@ def get_combined_cloud_df(config):
     # Combine all dataframes into a single dataframe
     if len(cloud_properties_df_list)==0:
         return None
-    return pd.concat(
-        [df for sublist in cloud_properties_df_list for df in sublist], ignore_index=True)
+    to_concat = [df for sublist in cloud_properties_df_list for df in sublist]
+    if len(to_concat) !=0:
+        return pd.concat(
+            to_concat, ignore_index=True)
+    else:
+        return None
 
 def month_to_season(month):
     if month in [12, 1, 2]:
@@ -433,6 +437,9 @@ def combine_whole_year(config):
                 raise NotImplementedError("Only yearly analysis is implemented")
             temp_config = read_config(config_fp)
             df = get_combined_cloud_df(temp_config)
+            if df is None:
+                print(f"Skipping Month: {month} Part: {part}")
+                continue
             if part==2 and n_parts==3:
                 config_fp_3 = os.path.join(config["yearly_config_folder"],f'{year}_tracking',f'{month:02}_{3:02}.yaml')
                 temp_config_3 = read_config(config_fp_3)
