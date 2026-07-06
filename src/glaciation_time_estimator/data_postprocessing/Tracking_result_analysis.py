@@ -267,8 +267,23 @@ def extract_claas_cth(cth_arr, cloud_location_ind_non_agg):
     ind2 = cloud_location_ind_non_agg[1]
     return cth_arr[0, ind1, ind2]
 
+def _gen_ouput_dir_single_temp_range(pole, min_temp, max_temp, config):
+    # Ensure output directory exists
+    if config["Resample"]:
+        output_dir = os.path.join(
+            config['postprocessing_output_dir'], pole,
+            config['time_folder_name'],
+            f"R_Agg_{config['agg_fact']:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}"
+        )
+    else:
+        output_dir = os.path.join(
+            config['postprocessing_output_dir'], pole,
+            config['time_folder_name'],
+            f"Agg_{config['agg_fact']:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}"
+        )
+    return output_dir
 
-def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
+def save_single_temp_range_results(cloud_arr, output_dir , config):
     columns = ["tracknumber","is_large_pix_cloud", "is_cot_valid_cloud", "is_ctp_valid_cloud", "is_liq", "is_mix", "is_ice", "max_water_frac",
                "max_ice_fraction", "avg_size[km]", "avg_size_unagg[km]", "max_size[km]",
                "min_size[km]", "avg_size[px]", "max_size[px]",
@@ -359,20 +374,6 @@ def save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config):
                     variable_list.extend([current_cloud.val_intersec_lon,current_cloud.val_intersec_lat])
                 cloudinfo_df.iloc[cloud_ind] = variable_list
 
-
-    # Ensure output directory exists
-    if config["Resample"]:
-        output_dir = os.path.join(
-            config['postprocessing_output_dir'], pole,
-            config['time_folder_name'],
-            f"R_Agg_{config['agg_fact']:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}"
-        )
-    else:
-        output_dir = os.path.join(
-            config['postprocessing_output_dir'], pole,
-            config['time_folder_name'],
-            f"Agg_{config['agg_fact']:02}_T_{abs(round(min_temp)):02}_{abs(round(max_temp)):02}"
-        )
 
     os.makedirs(os.path.dirname(output_dir), exist_ok=True)
 
@@ -662,8 +663,8 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
             del cloud_location_ind_non_agg
         del cloud_location_ind
         del cloud_pix_area_values, cloud_lat_values, cloud_lon_values
- 
-    save_single_temp_range_results(cloud_arr, pole, min_temp, max_temp, config)
+    output_dir = _gen_ouput_dir_single_temp_range(pole, min_temp, max_temp, config)
+    save_single_temp_range_results(cloud_arr, output_dir, config)
 
 
 
