@@ -10,7 +10,8 @@ from derivative import dxdt
 from scipy.integrate import cumulative_trapezoid
 import warnings
 
-
+global global_rmse
+global_rmse=0.08
 def Extract_array_from_df(series: pd.Series):
     if series.empty:
         return None
