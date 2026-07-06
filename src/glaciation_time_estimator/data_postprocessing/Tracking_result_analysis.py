@@ -285,13 +285,13 @@ def _gen_ouput_dir_single_temp_range(pole, min_temp, max_temp, config):
 
 def save_single_temp_range_results(cloud_arr, output_dir , config):
     columns = ["tracknumber","is_large_pix_cloud", "is_cot_valid_cloud", "is_ctp_valid_cloud", "is_liq", "is_mix", "is_ice", "max_water_frac",
-               "max_ice_fraction", "avg_size[km]", "avg_size_unagg[km]", "max_size[km]",
+               "max_ice_fraction", "avg_size[km]", "max_size[km]",
                "min_size[km]", "avg_size[px]", "max_size[px]",
                "min_size[px]", "track_start_time", "track_length", "avg_cot", "avg_ctp", "avg_ctt",
                "glaciation_start_time", "glaciation_end_time", "avg_lat",
                "avg_lon", "start_ice_fraction", "end_ice_fraction",
                "ice_frac_hist", "cot_hist", "cot_std_hist",  "cot_nan_frac_hist", "ctp_hist", "ctp_std_hist", "ctp_nan_frac_hist", "ctt_hist", "ctt_std_hist" , "lat_hist", "lon_hist",
-               "size_hist_km"]
+               "size_hist_km", "size_hist_km_debug"]
     additional_validation_variables = (config["validation_mode"] == "dardar") or (config["validation_mode"] == "modis")
     if additional_validation_variables:
         #               Data from Dardar-Mask
@@ -322,7 +322,6 @@ def save_single_temp_range_results(cloud_arr, output_dir , config):
                     current_cloud.max_water_fraction,
                     current_cloud.max_ice_fraction,
                     extract_value(current_cloud.avg_cloud_size_km),
-                    extract_value(current_cloud.avg_cloud_size_km_debug),
                     extract_value(current_cloud.max_size_km),
                     extract_value(current_cloud.min_size_km),
                     extract_value(current_cloud.avg_cloud_size_px),
@@ -350,7 +349,8 @@ def save_single_temp_range_results(cloud_arr, output_dir , config):
                     current_cloud.std_ctt_list,
                     current_cloud.lat_list,
                     current_cloud.lon_list,
-                    current_cloud.cloud_size_km_list
+                    current_cloud.cloud_size_km_list,
+                    current_cloud.cloud_size_km_list_debug
                 ]
                 if additional_validation_variables:
                     variable_list.extend([

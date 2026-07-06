@@ -92,7 +92,7 @@ n_preproc_threads: 8
 postprocessing_fast_mode: False
 fast_mode_arr_size: 20000
 # Folder to output the cloud and glaciation properties parquet (and CSV) files
-postprocessing_output_dir: /nfs/ch4/wolke_scratch/dnikolo/GTE_Validation/DARDAR/Bulk
+postprocessing_output_dir: /nfs/ch4/wolke_scratch/dnikolo/GTE_Validation/DARDAR/Bulk_02
 #Format of the postprocessing_output_dir subfolder name in which the outputs from a given run are stored
 time_folder_format: "%Y%m%d.%H%M"
 n_postproc_cores: 4
