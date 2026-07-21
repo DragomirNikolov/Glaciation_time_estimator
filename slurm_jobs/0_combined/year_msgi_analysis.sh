@@ -35,11 +35,12 @@
 #   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/r2b5_wbf_v3_1y/2007_tracking/01_01.yaml \
 #   -c /cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/r2b5_wbf_v3_1y/2007_tracking/01_02.yaml \
 
-while getopts 'y:w:p:' flag; do
+while getopts 'y:w:p:c:' flag; do
     case "${flag}" in
         y) YEAR=${OPTARG} ;;
         w) wait_time=${OPTARG} ;;
         p) MSGI_CONFIG_DIR=${OPTARG} ;;
+        c) GTE_CONFIG_DIR=${OPTARG} ;;
         *)
             print_usage
             exit 1
@@ -57,17 +58,22 @@ if [ -z "$MSGI_CONFIG_DIR" ]; then
     exit 1
 fi
 
+if [ -z "$GTE_CONFIG_DIR" ]; then
+    echo "Error: GTE_CONFIG_DIR is empty. Enter -c <GTE_CONFIG_DIR>. GTE_CONFIG_DIR is the folder where all the <year>_tracking/<#month>_<#part>.yaml files are stored."
+    exit 1
+fi
+
 config_list=()
 for i in {1..12}; do
     for j in {1..2}; do
         config_list+=(
-            -c "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/ICON_output/nudging/R2B5/wbf_v3/${YEAR}_tracking/$(printf "%02d" "$i")_$(printf "%02d" "$j").yaml"
+            -c "${GTE_CONFIG_DIR}/${YEAR}_tracking/$(printf "%02d" "$i")_$(printf "%02d" "$j").yaml"
         )
     done
 done
 
 cmd=(
-    bash "${GTE_DIR}slurm_jobs/0_combined/Complete_analysis_config_list_delayed.sh"
+    bash "${GTE_DIR}slurm_jobs/0_combined/Complete_analysis_config_list.sh"
     -m msgi
     -w "${wait_time}"
     -p "${MSGI_CONFIG_DIR}"

@@ -3,13 +3,13 @@
 ########################
 # Start and end date and time for the analyis run:
 # The date and time are in the format YYYYMMDD_HHMM
-start_time: "20000201_0000"
-end_time: "20000203_0000"
+start_time: "20000101_0000"
+end_time: "20000115_0000"
 # List of temperature bin widths [deg C] for which the analysis is performed
 # Stability has only been tested with only 1 member in the list so the usage of more is discouraged
 t_deltas: [6]
 #Is this file used to set up an analysis of a whole year of data
-Analyze_year: False
+Analyze_year: True
 # In how many parts are the months in this year split
 n_month_parts: 2
 # The folder which contains the following structure:
@@ -23,7 +23,7 @@ n_month_parts: 2
 #      02_<n_month_parts>.yaml
 #      ...
 #      12_<n_month_parts>.yaml
-yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/CESM_output"
+yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/CESM_output/ootb"
 
 ########################
 # Data structure and location
@@ -63,9 +63,9 @@ grid_fps:
 #        .../{pole_folders[1]}/YYYY/MM/DD
 #        etc.
 # The analized time period shuld be available in both hemispheres for the program to work
-CLAAS_fp: "/nfs/ch4/wolke_scratch/dnikolo/CESM_Data/test_01/CT_data"
+CLAAS_fp: "/nfs/ch4/wolke_scratch/dnikolo/CESM_Data/ootb/CT_data"
 # Folder where the netcdf cloud tracking location files are stored
-job_output_fp: "/nfs/ch4/wolke_scratch/dnikolo/CESM_Data/test_01/job_output"
+job_output_fp: "/nfs/ch4/wolke_scratch/dnikolo/CESM_Data/ootb/job_output"
 
 ###############
 # Preprocessing settings
@@ -94,7 +94,7 @@ postprocessing_fast_mode: False
 fast_mode_arr_size: 20000
 
 # Folder to output the cloud and glaciation properties parquet (and CSV) files
-postprocessing_output_dir: "/nfs/ch4/wolke_scratch/dnikolo/CESM_Data/test_01/postprocessing_output"
+postprocessing_output_dir: "/nfs/ch4/wolke_scratch/dnikolo/CESM_Data/ootb/postprocessing_output"
 #Format of the postprocessing_output_dir subfolder name in which the outputs from a given run are stored
 time_folder_format: "%Y%m%d.%H%M"
 
