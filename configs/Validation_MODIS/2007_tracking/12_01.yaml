@@ -23,7 +23,7 @@ n_month_parts: 2
 #      02_<n_month_parts>.yaml
 #      ...
 #      12_<n_month_parts>.yaml
-yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Validation_MODIS"
+yearly_config_folder: "/cluster/work/climate/dnikolo/n2o/Glaciation_time_estimator/configs/Validation_MODIS/02"
 
 ########################
 # Data structure and location
@@ -92,7 +92,7 @@ n_preproc_threads: 8
 postprocessing_fast_mode: False
 fast_mode_arr_size: 20000
 # Folder to output the cloud and glaciation properties parquet (and CSV) files
-postprocessing_output_dir: eu:/cluster/work/climate/dnikolo/GTE_validation/MODIS
+postprocessing_output_dir: "/nfs/ch4/wolke_scratch/dnikolo/GTE_Validation/MODIS/02"
 #Format of the postprocessing_output_dir subfolder name in which the outputs from a given run are stored
 time_folder_format: "%Y%m%d.%H%M"
 n_postproc_cores: 4
@@ -110,4 +110,4 @@ glac_threshold: 0.4
 # Validation settings
 validation_mode: MODIS
 # Locaition of binned and quality controlled DARDAR CPH and CTH data.
-val_CPH_fp: "/nfs/ch4/wolke_scratch/dnikolo/MODIS/CPH_data_optical"
+val_CPH_fp: "/nfs/ch4/wolke_scratch/dnikolo/MODIS/CPH_02"

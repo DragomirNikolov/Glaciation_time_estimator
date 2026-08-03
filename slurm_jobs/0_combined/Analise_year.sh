@@ -25,7 +25,7 @@ fi
 postproc_job_ids=()
 
 #Iterate over all months and all (in my case 2) parts of each month
-for MONTH in {01..12}; do
+for MONTH in {06..12}; do
     for part in 01 02; do
         # Set name of configuration file
         
@@ -35,7 +35,7 @@ for MONTH in {01..12}; do
             preproc_id=$(sbatch --parsable -J "${YEAR}_${MONTH}_${part}_preproc" "${GTE_DIR}slurm_jobs/1_preprocessing/preproc_job.bsub" -c $CONFIG_FILE)
         else
             # compute how many minutes to wait
-            delay_minutes=$(( ((10#$MONTH - 1) / 4) * wait_time ))
+            delay_minutes=$(( ((10#$MONTH - 6) / 2) * wait_time ))
             preproc_id=$(sbatch --parsable --begin=now+${delay_minutes}minutes -J "${YEAR}_${MONTH}_${part}_preproc" "${GTE_DIR}slurm_jobs/1_preprocessing/preproc_job.bsub" -c $CONFIG_FILE)
         fi
         # Run tracking and post-processing job for the current part of month
