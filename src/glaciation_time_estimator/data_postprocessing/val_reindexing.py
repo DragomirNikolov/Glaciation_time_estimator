@@ -18,6 +18,7 @@ def build_val_index(val_lat, val_lon):
         - 'shape' original dd grid shape
     """
     val_lat = np.asarray(val_lat)
+    # val_lon = np.asarray(val_lon)
     val_lon = _wrap_lon180(np.asarray(val_lon))
 
     # Determine grid shape and flatten

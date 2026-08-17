@@ -363,7 +363,7 @@ def save_single_temp_range_results(cloud_arr, output_dir , config):
                         current_cloud.val_cth_std_list,
                         current_cloud.val_cth_deviation,
                         current_cloud.val_pix_claas_cth_meas,
-                        current_cloud.val_pix_claas_cph_std,
+                        current_cloud.val_pix_claas_cth_std,
                         current_cloud.valid_cth_cloud,
                         current_cloud.avg_cth,
                         current_cloud.mean_cth_list,
