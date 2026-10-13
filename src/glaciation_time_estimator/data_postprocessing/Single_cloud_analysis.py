@@ -124,6 +124,8 @@ class Cloud:
         self.valid_cth_cloud = False
         self.cth_nan_frac_list = []
 
+        self.model_grid_ncell = []
+
         self.deactivate_cloud = False
         self.agg_fact=agg_fact
 
@@ -361,7 +363,7 @@ class Cloud:
     def update_validation_variables(self, val_cph,val_cth,val_cth_std, cloud_values, claas_cth_values, cloud_lon_px, cloud_lat_px):
         self.update_validation_cph( val_cph, cloud_values, cloud_lon_px,cloud_lat_px)
         self.update_validation_cth( val_cth, claas_cth_values)
-        
+
     def update_validation_cph(self, val_cph, cloud_values, cloud_lon_px, cloud_lat_px ):
         if val_cph.size > 0:
             # 0.99 is 1 with accounting for floating point errors
@@ -503,6 +505,9 @@ class Cloud:
         self.mean_ctt_list.append(mean_ctt)
         self.std_ctt_list.append(std_ctt)
 
+    def update_model_ncells(self,model_ind):
+        self.model_grid_ncell.append(model_ind)
+    
     def update_missing_cloud(self):
         if self.track_end_time and (not self.terminate_cloud):
             self.n_timesteps_no_cloud += 1

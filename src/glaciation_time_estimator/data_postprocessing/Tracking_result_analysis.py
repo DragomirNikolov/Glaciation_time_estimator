@@ -21,6 +21,8 @@ array2d_type = types.int16[:, ::1]                   # (2, n_pts) C-contiguous
 dict_lists_t = types.DictType(types.int64, list_type)
 dict_arrays_t = types.DictType(types.int64, array2d_type)
 
+MODEL_NCELL_LOC = {"np":"/nfs/ch4/wolke_scratch/dnikolo/ICON_Data/aux_tools/r2b4_grid_ncell_np.nc",
+                   "sp":"/nfs/ch4/wolke_scratch/dnikolo/ICON_Data/aux_tools/r2b4_grid_ncell_sp.nc"}
 
 @njit
 def extract_cloud_coordinates(cloudtracknumber_field,   # 3-D, shape (1, ny, nx)
@@ -194,7 +196,7 @@ def extract_resampled_vars(time,pole, config):
     resampled_filename=time.strftime(
             f"%Y/%m/%d/{tag}_{time.strftime('%Y%m%d%H%M%S')}.nc")
     with xr.open_dataset(os.path.join(config["CLAAS_fp"],"Resampled_Data", pole, resampled_filename)) as resampled_data:
-        return resampled_data['ctp_resampled'].values, resampled_data['ctt_resampled'].values, None
+        return resampled_data['ctp_resampled'].values, resampled_data['ctt_resampled'].values, None, resampled_data['cot_resampled'].values
             
 # def extract_dardar_vars(time, config):
 #     dardar_filename = time.strftime("%Y/%m/%d/val_CT_%Y%m%d_%H%M.nc")
@@ -267,6 +269,15 @@ def extract_claas_cth(cth_arr, cloud_location_ind_non_agg):
     ind2 = cloud_location_ind_non_agg[1]
     return cth_arr[0, ind1, ind2]
 
+def extract_cloud_ncell(model_grid_ncell,cloud_location_ind_agg):
+    ind1 = cloud_location_ind_agg[0]
+    ind2 = cloud_location_ind_agg[1]
+    indeces = model_grid_ncell[ind1,ind2]
+    if np.isnan(indeces).any():
+        raise ValueError("Nans in model ncell indeces??")
+    indeces= indeces[~np.isnan(indeces)]
+    return np.unique(indeces.astype(int))
+
 def _gen_ouput_dir_single_temp_range(pole, min_temp, max_temp, config):
     # Ensure output directory exists
     if config["Resample"]:
@@ -302,8 +313,11 @@ def save_single_temp_range_results(cloud_arr, output_dir , config):
                         # Data from claas
                         # CTH
                         "is_cth_valid_cloud", "avg_cth", "cth_hist", "cth_std_hist",  "cth_nan_frac_hist"])
-    if config["validation_mode"] == "dardar":
-        columns.extend(["val_intersec_lon","val_intersec_lat"])
+        if config["validation_mode"] == "dardar":
+            columns.extend(["val_intersec_lon","val_intersec_lat"])
+    if config["validation_mode"] == "model":
+        columns.extend(["model_grid_ncell"])
+    
     datapoints_per_cloud = len(columns)
     cloudinfo_df = pd.DataFrame(
         index=range(len(cloud_arr)), columns=columns)
@@ -329,6 +343,7 @@ def save_single_temp_range_results(cloud_arr, output_dir , config):
                     extract_value(current_cloud.min_size_px),
                     current_cloud.track_start_time,
                     current_cloud.track_length,
+
                     current_cloud.avg_cot,
                     current_cloud.avg_ctp,
                     current_cloud.avg_ctt,
@@ -370,8 +385,10 @@ def save_single_temp_range_results(cloud_arr, output_dir , config):
                         current_cloud.std_cth_list,
                         current_cloud.cth_nan_frac_list
                     ])
-                if config["validation_mode"] == "dardar":
-                    variable_list.extend([current_cloud.val_intersec_lon,current_cloud.val_intersec_lat])
+                    if config["validation_mode"] == "dardar":
+                        variable_list.extend([current_cloud.val_intersec_lon,current_cloud.val_intersec_lat])
+                if config["validation_mode"] == "model":
+                    variable_list.extend([current_cloud.model_grid_ncell])
                 cloudinfo_df.iloc[cloud_ind] = variable_list
 
 
@@ -405,8 +422,9 @@ def lat_lon_to_pix_arr(lat_arr,lon_arr):
     return 110*110*np.outer(res_lat,res_lon)[np.newaxis,:,:]*np.cos(np.deg2rad(lat_arr)) 
 
 
+
 # @profile
-def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area: np.array = None, pix_area_agg: np.array  = None,  lon: np.array =None, lat: np.array =None, lat_agg: np.array  = None, lon_agg: np.array =None) -> None:
+def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, config: dict, pix_area: np.array = None, pix_area_agg: np.array  = None,  lon: np.array =None, lat: np.array =None, lat_agg: np.array  = None, lon_agg: np.array =None, model_grid_ncell:np.array = None ) -> None:
     """
     Analises a given cloud top temperature range and saves the results in a dataframe.
     
@@ -461,6 +479,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
     if validation_mode == "model":
         lat_arr_agg = lat_agg.values if lat_agg is not None else None
         lon_arr_agg = lon_agg.values if lon_agg is not None else None
+        
         assert lat_arr_agg is not None, "lat_arr_agg is somehow none"
         assert ((lon_arr_agg is None) or (len(lon_arr_agg.shape) == 3)), f"Aggregated Latitude array is not 3-D, it is {len(lat_arr.shape)}D"
         assert ((lon_arr_agg is None) or (len(lon_arr_agg.shape) == 3)), f"Aggregated Longitude array is not 3-D, it is {len(lon_arr.shape)}D"
@@ -486,7 +505,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
 
         if collect_aval_properties:
             if is_resampled or validation_mode=="model":
-                ctp_arr, ctt_arr, cth_arr = extract_resampled_vars(time, pole, config)
+                ctp_arr, ctt_arr, cth_arr, cot_arr = extract_resampled_vars(time, pole, config)
                 cot_arr = np.ones(ctp_arr.shape)
                 cwp_arr = np.array([])
             else:
@@ -572,6 +591,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                         if validation_mode=="model":
                             cloud_pix_area_values, cloud_lat_values, cloud_lon_values = extract_agg_aux_vars(
                                 aux_ind, cloud_location_ind, pix_arr_agg, lat_arr_agg, lon_arr_agg)
+                            
                         else:
                             cloud_pix_area_values, cloud_lat_values, cloud_lon_values = extract_aux_vars(
                                 aux_ind, cloud_location_ind_non_agg, pix_arr, lat_arr, lon_arr)
@@ -593,6 +613,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                                     )
                                 cloud_cot_values, cloud_ctp_values, cloud_ctt_values = extract_additional_values_agg(
                                     cot_arr, ctp_arr, ctt_arr, cloud_location_ind)
+                                cloud_ncell = extract_cloud_ncell(model_grid_ncell,cloud_location_ind)
                             else:
                                 cloud_cot_values, cloud_ctp_values, cloud_ctt_values = extract_additional_values(
                                     cot_arr, ctp_arr, ctt_arr, cloud_location_ind_non_agg)
@@ -646,6 +667,7 @@ def analyze_single_temp_range(temp_ind: int, tracking_fps: dict, pole: str, conf
                                 time,
                                 cloud_cph_values, cloud_cot_values, cloud_ctp_values, cloud_ctt_values,
                                 cloud_lat_values, cloud_lon_values, agg_pix_area_values, agg_pix_area_values, is_input_agg = True)
+                            cloud_arr[track_number-1].update_model_ncells(cloud_ncell)
                         else:
                             cloud_arr[track_number-1].update_status(
                                 time,
@@ -673,6 +695,7 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config):
     aux_ds = xr.load_dataset(config["aux_fps"][pole], decode_times=False)
     aux_ds_agg = xr.load_dataset(config["aux_fps_agg"][pole], decode_times=False)
     n_procs = config.get("n_postproc_cores",4)
+    model_grid_ncell = xr.open_dataset(MODEL_NCELL_LOC[pole])["ncells"].values
     if config["Resample"]:
         with Pool(n_procs) as pool:
             part_single_temp_range = partial(
@@ -691,9 +714,14 @@ def analize_single_pole(pole, cloud_dict, tracking_fps, config):
         # assert (~np.isnan(pix_area_agg.values).any()), "NaN values in aggregated pixel area array"
         # assert (~np.isnan(lat_agg.values).any()), "NaN values in aggregated pixel area array"
         validation_mode = config.get("validation_mode", None)
-        if validation_mode in ["model","dardar","modis"] :
+        if validation_mode in ["dardar","modis"] :
             part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
-                                            pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat, lat=lat_mat, lat_agg = lat_agg, lon_agg = lon_agg)
+                                            pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat,
+                                            lat=lat_mat, lat_agg = lat_agg, lon_agg = lon_agg)
+        elif validation_mode == "model":
+            part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
+                                            pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat,
+                                            lat=lat_mat, lat_agg = lat_agg, lon_agg = lon_agg, model_grid_ncell=model_grid_ncell)
         else: 
             part_single_temp_range = partial(analyze_single_temp_range, tracking_fps=tracking_fps,
                                             pole=pole, config=config, pix_area=pix_area, pix_area_agg = pix_area_agg, lon=lon_mat, lat=lat_mat)

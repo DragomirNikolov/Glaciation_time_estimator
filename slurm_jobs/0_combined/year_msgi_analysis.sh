@@ -39,8 +39,8 @@ while getopts 'y:w:p:c:' flag; do
     case "${flag}" in
         y) YEAR=${OPTARG} ;;
         w) wait_time=${OPTARG} ;;
-        p) MSGI_CONFIG_DIR=${OPTARG} ;;
-        c) GTE_CONFIG_DIR=${OPTARG} ;;
+        p) MSGI_CONFIG_DIR=${OPTARG} ;; # Exact MSGI config file location
+        c) GTE_CONFIG_DIR=${OPTARG} ;; # folder that contains **year**_tracking/**month**_**part**.yaml 
         *)
             print_usage
             exit 1
